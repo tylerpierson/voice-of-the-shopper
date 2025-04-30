@@ -1,113 +1,133 @@
 .container {
-  padding: 40px;
-  background-color: #f7f9fc;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f9f9f9;
+  min-height: 100vh;
 }
 
 .title {
   font-size: 2rem;
-  margin-bottom: 20px;
-  color: #2c3e50;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #333;
 }
 
 .tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 30px;
+  margin-bottom: 2rem;
+  justify-content: center;
 }
 
 .tabButton {
   padding: 10px 16px;
-  border: 1px solid #ccc;
-  background-color: white;
-  border-radius: 8px;
+  border: none;
+  border-radius: 5px;
+  background-color: #e1e1e1;
+  color: #333;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  position: relative;
+  transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: #e3f2fd;
-    border-color: #90caf9;
+    background-color: #ccc;
   }
 }
 
 .activeTab {
-  background-color: #2196f3;
+  background-color: #007bff;
   color: white;
-  border-color: #1976d2;
+
+  &:hover {
+    background-color: #0056b3;
+  }
 }
 
 .notificationDot {
+  position: absolute;
+  top: -5px;
+  right: -5px;
   background-color: red;
   color: white;
-  font-size: 0.75rem;
   border-radius: 50%;
-  padding: 4px 8px;
-  margin-left: 8px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
 }
 
 .sentimentSection {
-  margin-top: 40px;
+  margin-bottom: 3rem;
 }
 
 .sentimentHeader {
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 15px;
-  font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
+  padding: 8px 12px;
+  margin-bottom: 1rem;
+  border-radius: 4px;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
+  background: white;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
   border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .table th,
 .table td {
-  padding: 14px 18px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 12px 16px;
   text-align: left;
-  vertical-align: top;
+}
+
+.table th {
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+.table tbody tr {
+  border-top: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: #f5faff;
+  }
 }
 
 .summaryButton {
-  background: none;
-  border: none;
-  text-align: left;
-  padding: 0;
-  color: #1e88e5;
-  cursor: pointer;
+  all: unset;
+  color: #007bff;
   font-weight: 500;
-  font-size: 1rem;
-  text-decoration: underline;
+  cursor: pointer;
 
   &:hover {
-    color: #1565c0;
+    text-decoration: underline;
   }
 }
 
 .badge {
-  padding: 6px 10px;
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
   border-radius: 12px;
-  font-size: 0.875rem;
-  font-weight: bold;
+  text-align: center;
 }
 
 .deleteBtn {
-  background-color: #e53935;
+  padding: 6px 12px;
+  background-color: #dc3545;
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
+  border-radius: 4px;
+  font-weight: bold;
   cursor: pointer;
-  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: #c62828;
+    background-color: #b52a37;
   }
 }

@@ -142,12 +142,12 @@ function AdminPage({ onBackToChatbot }) {
             </thead>
             <tbody>
               {groupedBySentiment[sentiment].map((fb) => (
-                <tr key={fb.session_id}>
-                  <td className={styles.td}>
-                    <button onClick={() => goToConversationPage(fb.session_id)} className={styles.summaryButton}>
-                      {fb.summary}
-                    </button>
-                  </td>
+                <tr
+                  key={fb.session_id}
+                  className={styles.clickableRow}
+                  onClick={() => goToConversationPage(fb.session_id)}
+                >
+                  <td className={styles.td}>{fb.summary}</td>
                   <td className={styles.td}>
                     <span style={getSentimentStyle(fb.sentiment)} className={styles.badge}>
                       {fb.sentiment}
@@ -156,11 +156,17 @@ function AdminPage({ onBackToChatbot }) {
                   <td className={styles.td}>{fb.department}</td>
                   <td className={styles.td}>{fb.user_name || "Anonymous"}</td>
                   <td className={styles.td}>
-                    <button onClick={() => deleteSummary(fb.session_id)} className={styles.deleteBtn}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation(); // prevent row click from triggering
+                        deleteSummary(fb.session_id);
+                      }}
+                      className={styles.deleteBtn}
+                    >
                       Delete
                     </button>
                   </td>
-                </tr>
+                </tr>              
               ))}
             </tbody>
           </table>

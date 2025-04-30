@@ -26,7 +26,20 @@ function AppWrapper() {
   const renderHeader = () => (
     <div className={styles.header}>
       <img src="/img/vos_logo.png" alt="Voice of the Shopper" className={styles.logo} />
-      {(location.pathname === "/admin" || location.pathname.startsWith("/conversation")) && (
+  
+      {/* Show Go to Admin from Chat */}
+      {location.pathname === "/" && submittedName && (
+        <button
+          className={styles.backButton}
+          onClick={() => navigate("/admin")}
+          style={{ margin: 20 }}
+        >
+          Go to Admin Dashboard
+        </button>
+      )}
+  
+      {/* Show Back to Chatbot from Admin */}
+      {location.pathname === "/admin" && (
         <button
           className={styles.backButton}
           onClick={handleResetUserName}
@@ -35,8 +48,19 @@ function AppWrapper() {
           Back to Chatbot
         </button>
       )}
+  
+      {/* Show Back to Admin from Conversation */}
+      {location.pathname.startsWith("/conversation") && (
+        <button
+          className={styles.backButton}
+          onClick={() => navigate("/admin")}
+          style={{ margin: 20 }}
+        >
+          Back to Admin Dashboard
+        </button>
+      )}
     </div>
-  );
+  );  
 
   return (
     <>
