@@ -13,14 +13,14 @@ import ProgressiveOnboarding from "./components/ProgressiveOnboarding/Progressiv
 import styles from "./App.module.scss";
 
 function AppWrapper() {
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [submittedName, setSubmittedName] = useState(null);
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleResetUserName = () => {
-    setShowOnboarding(true);
+    setShowOnboarding(false);
     setSubmittedName(null);
     setUsername("");
     navigate("/");
