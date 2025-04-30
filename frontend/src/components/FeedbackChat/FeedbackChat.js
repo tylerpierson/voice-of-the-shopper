@@ -66,11 +66,14 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
 
   const finalizeFeedback = async () => {
     try {
-      await fetch(`http://localhost:8000/finalize-summary/${sessionId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_name: userName })
-      });
+        await fetch(`http://localhost:8000/finalize-summary/${sessionId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_name: userName,
+              category: selectedCategory  // ✅ send this!
+            })
+          });          
       setShowThankYou(true);
     } catch (error) {
       console.error("Finalization error:", error);

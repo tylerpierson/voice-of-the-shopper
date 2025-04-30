@@ -140,14 +140,18 @@ def summarize_conversation(session_id: str):
     summary = response.json()['choices'][0]['message']['content']
     return {"summary": summary}
 
+class FinalizePayload(BaseModel):
+    user_name: str
+    category: str = None  # ✅ optional but preferred over classification
+
 @app.post("/finalize-summary/{session_id}")
-def finalize_summary(session_id: str, feedback: Feedback):
-    user_name = feedback.user_name
+def finalize_summary(session_id: str, payload: FinalizePayload):
     result = summarize_conversation(session_id)
     summary = result['summary']
-    department = classify_department(summary)
+    
+    # ✅ Use provided category, or fallback
+    department = payload.category or classify_department(summary)
 
-    # Run sentiment analysis
     user_texts = conn.execute(
         "SELECT text FROM chat_messages WHERE session_id = ? AND role = 'user'",
         (session_id,)
@@ -158,11 +162,12 @@ def finalize_summary(session_id: str, feedback: Feedback):
 
     conn.execute(
         "INSERT OR REPLACE INTO feedback_summary (session_id, summary, department, sentiment, seen, user_name) VALUES (?, ?, ?, ?, ?, ?)",
-        (session_id, summary, department, sentiment, 0, feedback.user_name)
+        (session_id, summary, department, sentiment, 0, payload.user_name)
     )
     conn.commit()
 
     return {"summary": summary, "department": department, "sentiment": sentiment}
+
 
 @app.get("/get-summaries")
 def get_summaries():
@@ -208,24 +213,3 @@ def delete_summary(session_id: str):
     conn.execute("DELETE FROM feedback_summary WHERE session_id = ?", (session_id,))
     conn.commit()
     return {"status": "deleted"}
-
-def classify_department(summary_text):
-    text = summary_text.lower()
-    if "taste" in text:
-        return "Taste"
-    elif "packaging" in text:
-        return "Packaging"
-    elif "price" in text:
-        return "Price"
-    elif "availability" in text:
-        return "Availability"
-    elif "store" in text or "experience" in text:
-        return "Store Experience"
-    elif "promotion" in text or "deal" in text:
-        return "Promotions"
-    elif any(word in text for word in ["sustainability", "sustainable", "eco", "environment"]):
-        return "Sustainability"
-    elif "family" in text or "kids" in text:
-        return "Family-Friendliness"
-    else:
-        return "Uncategorized"
