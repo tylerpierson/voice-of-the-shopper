@@ -1,10 +1,12 @@
 from fastapi import FastAPI
+from fastapi import Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from transformers import pipeline
 import sqlite3
 import requests
+from typing import Optional
 from uuid import uuid4
 
 app = FastAPI()
@@ -31,7 +33,6 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 )
 ''')
 
-# Make sure `sentiment` column exists in feedback_summary
 conn.execute('''
 CREATE TABLE IF NOT EXISTS feedback_summary (
     id INTEGER PRIMARY KEY,
@@ -39,15 +40,26 @@ CREATE TABLE IF NOT EXISTS feedback_summary (
     summary TEXT,
     department TEXT,
     sentiment TEXT,
+    seen INTEGER DEFAULT 0,
+    user_name TEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 )
 ''')
 
-# Add sentiment column if it doesn't exist
+# Add columns if they don’t exist
 try:
     conn.execute("ALTER TABLE feedback_summary ADD COLUMN sentiment TEXT")
 except sqlite3.OperationalError:
-    # If the column already exists, ignore the error
+    pass
+
+try:
+    conn.execute("ALTER TABLE feedback_summary ADD COLUMN seen INTEGER DEFAULT 0")
+except sqlite3.OperationalError:
+    pass
+
+try:
+    conn.execute("ALTER TABLE feedback_summary ADD COLUMN user_name TEXT")
+except sqlite3.OperationalError:
     pass
 
 conn.execute("UPDATE feedback_summary SET sentiment = 'Unknown' WHERE sentiment IS NULL")
@@ -56,13 +68,14 @@ conn.commit()
 sentiment_pipeline = pipeline("sentiment-analysis")
 
 class Feedback(BaseModel):
-    message: str
-    session_id: str = None
-    category: str = None
+    message: Optional[str] = None
+    session_id: Optional[str] = None
+    category: Optional[str] = None
+    user_name: Optional[str] = None
+
 
 @app.post("/submit-feedback")
 def submit_feedback(feedback: Feedback):
-    print("Received feedback:", feedback)
     try:
         session_id = feedback.session_id if feedback.session_id else str(uuid4())
 
@@ -128,12 +141,13 @@ def summarize_conversation(session_id: str):
     return {"summary": summary}
 
 @app.post("/finalize-summary/{session_id}")
-def finalize_summary(session_id: str):
+def finalize_summary(session_id: str, feedback: Feedback):
+    user_name = feedback.user_name
     result = summarize_conversation(session_id)
     summary = result['summary']
     department = classify_department(summary)
 
-    # Run sentiment analysis on user messages
+    # Run sentiment analysis
     user_texts = conn.execute(
         "SELECT text FROM chat_messages WHERE session_id = ? AND role = 'user'",
         (session_id,)
@@ -143,8 +157,8 @@ def finalize_summary(session_id: str):
     sentiment = sentiment_result['label']
 
     conn.execute(
-        "INSERT INTO feedback_summary (session_id, summary, department, sentiment) VALUES (?, ?, ?, ?)",
-        (session_id, summary, department, sentiment)
+        "INSERT OR REPLACE INTO feedback_summary (session_id, summary, department, sentiment, seen, user_name) VALUES (?, ?, ?, ?, ?, ?)",
+        (session_id, summary, department, sentiment, 0, feedback.user_name)
     )
     conn.commit()
 
@@ -153,20 +167,38 @@ def finalize_summary(session_id: str):
 @app.get("/get-summaries")
 def get_summaries():
     cursor = conn.execute(
-        "SELECT session_id, summary, department, sentiment FROM feedback_summary ORDER BY timestamp DESC"
+        "SELECT session_id, summary, department, sentiment, seen, user_name FROM feedback_summary ORDER BY timestamp DESC"
     )
     results = []
     for row in cursor.fetchall():
-        session_id, summary, department, sentiment = row
-        sentiment = sentiment if sentiment else "Unknown"  # <-- safely handle missing sentiment
+        session_id, summary, department, sentiment, seen, user_name = row
         results.append({
             "session_id": session_id,
             "summary": summary,
             "department": department,
-            "sentiment": sentiment
+            "sentiment": sentiment or "Unknown",
+            "seen": bool(seen),
+            "user_name": user_name or "Anonymous"
         })
     return results
 
+@app.post("/mark-seen/{category}")
+def mark_seen(category: str = Path(..., title="Category name")):
+    try:
+        conn.execute(
+            "UPDATE feedback_summary SET seen = 1 WHERE department = ?",
+            (category,)
+        )
+        conn.commit()
+        return {"status": "updated"}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.delete("/delete-summary/{session_id}")
+def delete_summary(session_id: str):
+    conn.execute("DELETE FROM feedback_summary WHERE session_id = ?", (session_id,))
+    conn.commit()
+    return {"status": "deleted"}
 
 def classify_department(summary_text):
     text = summary_text.lower()
@@ -182,15 +214,9 @@ def classify_department(summary_text):
         return "Store Experience"
     elif "promotion" in text or "deal" in text:
         return "Promotions"
-    elif "sustainable" in text or "eco" in text:
+    elif any(word in text for word in ["sustainability", "sustainable", "eco", "environment"]):
         return "Sustainability"
     elif "family" in text or "kids" in text:
         return "Family-Friendliness"
     else:
         return "Uncategorized"
-
-@app.delete("/delete-summary/{session_id}")
-def delete_summary(session_id: str):
-    conn.execute("DELETE FROM feedback_summary WHERE session_id = ?", (session_id,))
-    conn.commit()
-    return {"status": "deleted"}

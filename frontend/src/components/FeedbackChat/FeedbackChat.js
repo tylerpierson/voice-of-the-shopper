@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import style from "./FeedbackChat.module.scss";
 import ChatMessage from "../ChatMessage/ChatMessage";
 
@@ -7,22 +7,33 @@ const categories = [
   "Store Experience", "Promotions", "Sustainability", "Family-Friendliness"
 ];
 
-function FeedbackChat({ toggleAdmin }) {
+function FeedbackChat({ toggleAdmin, userName }) {
   const [messages, setMessages] = useState([
     { sender: "assistant", text: "👋 Hi there! Please select a category and tell me about your experience." }
   ]);
   const [input, setInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sessionId, setSessionId] = useState(null);
+  const [isTyping, setIsTyping] = useState(false);
 
-  const sendMessage = async (text) => {
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
+
+  const sendMessage = async (text, categoryOverride = null) => {
     const newMessages = [...messages, { sender: "user", text }];
     setMessages(newMessages);
     setInput("");
+    setIsTyping(true);
 
-    const body = { message: text };
-    if (sessionId) body.session_id = sessionId;
-    if (selectedCategory) body.category = selectedCategory;
+    const body = {
+      message: text,
+      user_name: userName,
+      session_id: sessionId,
+      category: categoryOverride || selectedCategory
+    };
 
     try {
       const response = await fetch("http://localhost:8000/submit-feedback", {
@@ -36,13 +47,15 @@ function FeedbackChat({ toggleAdmin }) {
       setMessages((prev) => [...prev, { sender: "assistant", text: data.bot_reply }]);
     } catch (error) {
       console.error("Failed to send feedback:", error);
+    } finally {
+      setIsTyping(false);
     }
   };
 
   const handleCategorySelect = (cat) => {
     setSelectedCategory(cat);
     const intro = `I'd like to give feedback about ${cat.toLowerCase()}.`;
-    sendMessage(intro);
+    sendMessage(intro, cat);
   };
 
   const handleSubmit = (e) => {
@@ -50,18 +63,20 @@ function FeedbackChat({ toggleAdmin }) {
     if (input.trim()) sendMessage(input);
   };
 
-  const finalizeFeedback = async () => {
+  const handleToggleAdmin = async () => {
     if (!sessionId) return;
     try {
-      const response = await fetch(`http://localhost:8000/finalize-summary/${sessionId}`, {
+      await fetch(`http://localhost:8000/finalize-summary/${sessionId}`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ user_name: userName, category: selectedCategory })
       });
-      const data = await response.json();
-      alert("✅ Feedback finalized and saved!");
     } catch (error) {
       console.error("Finalization error:", error);
-      alert("❌ Failed to finalize feedback.");
     }
+    toggleAdmin();
   };
 
   return (
@@ -82,9 +97,11 @@ function FeedbackChat({ toggleAdmin }) {
         {messages.map((msg, idx) => (
           <ChatMessage key={idx} sender={msg.sender} text={msg.text} />
         ))}
+        {isTyping && <ChatMessage sender="assistant" text={<TypingDots />} />}
+        <div ref={chatEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className={style.inputForm}>
         <input
           type="text"
           value={input}
@@ -97,23 +114,42 @@ function FeedbackChat({ toggleAdmin }) {
         </button>
       </form>
 
-      <button
-        onClick={async () => {
-          await finalizeFeedback();
-          toggleAdmin();
-        }}
-        className={style.toggleButton}
-      >
+      <button onClick={handleToggleAdmin} className={style.toggleButton}>
         Go to Admin Dashboard
       </button>
 
       <button
         className={style.finishButton}
-        onClick={finalizeFeedback}
+        onClick={async () => {
+          try {
+            const response = await fetch(`http://localhost:8000/finalize-summary/${sessionId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ user_name: userName, category: selectedCategory })
+            });
+            const data = await response.json();
+            alert("✅ Feedback finalized and saved!");
+          } catch (error) {
+            console.error("Finalization error:", error);
+            alert("❌ Failed to finalize feedback.");
+          }
+        }}
       >
         Finish Feedback
       </button>
     </div>
+  );
+}
+
+function TypingDots() {
+  return (
+    <span className={style.typingDots}>
+      <span>.</span>
+      <span>.</span>
+      <span>.</span>
+    </span>
   );
 }
 

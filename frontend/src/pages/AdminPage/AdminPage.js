@@ -1,19 +1,35 @@
 import { useEffect, useState } from "react";
-import style from "./AdminPage.module.scss";
+import styles from "./AdminPage.module.scss";
+
+const categories = [
+  "View All", "Taste", "Packaging", "Price", "Availability",
+  "Store Experience", "Promotions", "Sustainability", "Family-Friendliness"
+];
 
 function AdminPage() {
   const [feedbackList, setFeedbackList] = useState([]);
+  const [activeCategory, setActiveCategory] = useState("View All");
+  const [newFeedbackCounts, setNewFeedbackCounts] = useState({});
+  const [seenSummaries, setSeenSummaries] = useState(new Set());
 
   useEffect(() => {
-    fetchSummaries();
-  }, []);
-
-  const fetchSummaries = () => {
     fetch("http://localhost:8000/get-summaries")
       .then((res) => res.json())
-      .then((data) => setFeedbackList(data))
+      .then((data) => {
+        setFeedbackList(data);
+
+        const counts = {};
+        categories.forEach((cat) => {
+          if (cat === "View All") return;
+          const unseen = data.filter(
+            (fb) => fb.department === cat && !seenSummaries.has(fb.session_id)
+          );
+          if (unseen.length > 0) counts[cat] = unseen.length;
+        });
+        setNewFeedbackCounts(counts);
+      })
       .catch((err) => console.error("Error fetching feedbacks:", err));
-  };
+  }, [seenSummaries]);
 
   const deleteSummary = async (session_id) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this feedback?");
@@ -24,6 +40,7 @@ function AdminPage() {
         method: "DELETE",
       });
       setFeedbackList((prev) => prev.filter((fb) => fb.session_id !== session_id));
+      setSeenSummaries((prev) => new Set([...prev].filter((id) => id !== session_id)));
     } catch (err) {
       console.error("Error deleting summary:", err);
     }
@@ -42,69 +59,93 @@ function AdminPage() {
     }
   };
 
+  const sentiments = ["positive", "neutral", "negative"];
+
+  const filteredFeedbacks = activeCategory === "View All"
+    ? feedbackList
+    : feedbackList.filter((fb) => fb.department === activeCategory);
+
+  const groupedBySentiment = sentiments.reduce((acc, sentiment) => {
+    acc[sentiment] = filteredFeedbacks.filter(
+      (fb) => fb.sentiment.toLowerCase() === sentiment
+    );
+    return acc;
+  }, {});
+
+  const handleTabClick = (cat) => {
+    setActiveCategory(cat);
+    if (cat !== "View All") {
+      const seen = feedbackList
+        .filter((fb) => fb.department === cat)
+        .map((fb) => fb.session_id);
+      setSeenSummaries((prev) => new Set([...prev, ...seen]));
+      setNewFeedbackCounts((prev) => {
+        const updated = { ...prev };
+        delete updated[cat];
+        return updated;
+      });
+    }
+  };
+
   return (
-    <div style={{ padding: "40px", maxWidth: "1000px", margin: "auto" }}>
-      <h1 style={{ marginBottom: "20px" }}>Admin Feedback Dashboard</h1>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ backgroundColor: "#f1f1f1" }}>
-            <th style={styles.th}>Summary</th>
-            <th style={styles.th}>Sentiment</th>
-            <th style={styles.th}>Category</th>
-            <th style={styles.th}>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {feedbackList.map((fb) => (
-            <tr key={fb.session_id} style={{ borderBottom: "1px solid #ccc" }}>
-              <td style={styles.td}>{fb.summary}</td>
-              <td style={styles.td}>
-                <span style={{ ...styles.badge, ...getSentimentStyle(fb.sentiment) }}>
-                  {fb.sentiment}
-                </span>
-              </td>
-              <td style={styles.td}>{fb.department}</td>
-              <td style={styles.td}>
-                <button onClick={() => deleteSummary(fb.session_id)} style={styles.deleteBtn}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Admin Feedback Dashboard</h1>
+
+      <div className={styles.tabs}>
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            className={`${styles.tabButton} ${cat === activeCategory ? styles.activeTab : ""}`}
+            onClick={() => handleTabClick(cat)}
+          >
+            {cat}
+            {cat !== "View All" && newFeedbackCounts[cat] && (
+              <span className={styles.notificationDot}>{newFeedbackCounts[cat]}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {sentiments.map((sentiment) => (
+        <div key={sentiment} className={styles.sentimentSection}>
+          <h2 className={styles.sentimentHeader} style={getSentimentStyle(sentiment)}>
+            {sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} Feedback
+          </h2>
+
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Summary</th>
+                <th>Sentiment</th>
+                <th>Category</th>
+                <th>User</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {groupedBySentiment[sentiment].map((fb) => (
+                <tr key={fb.session_id}>
+                  <td className={styles.td}>{fb.summary}</td>
+                  <td className={styles.td}>
+                    <span className={{ ...styles.badge, ...getSentimentStyle(fb.sentiment) }}>
+                      {fb.sentiment}
+                    </span>
+                  </td>
+                  <td className={styles.td}>{fb.department}</td>
+                  <td className={styles.td}>{fb.user_name || "Anonymous"}</td>
+                  <td className={styles.td}>
+                    <button onClick={() => deleteSummary(fb.session_id)} className={styles.deleteBtn}>
+                      Delete
+                    </button>
+                  </td>
+                </tr>              
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </div>
   );
 }
 
-const styles = {
-  th: {
-    textAlign: "left",
-    padding: "10px",
-    fontWeight: "bold",
-    fontSize: "16px",
-  },
-  td: {
-    padding: "10px",
-    verticalAlign: "top",
-  },
-  badge: {
-    display: "inline-block",
-    padding: "5px 10px",
-    borderRadius: "20px",
-    fontSize: "14px",
-    fontWeight: 500,
-    textTransform: "capitalize",
-  },
-  deleteBtn: {
-    backgroundColor: "#dc3545",
-    color: "#fff",
-    border: "none",
-    padding: "6px 12px",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-};
-
 export default AdminPage;
-
