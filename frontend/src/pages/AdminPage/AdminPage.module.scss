@@ -1,0 +1,72 @@
+.container {
+  padding: 40px;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.heading {
+  margin-bottom: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.headerRow {
+  background-color: #f1f1f1;
+}
+
+.row {
+  border-bottom: 1px solid #ccc;
+}
+
+.th {
+  text-align: left;
+  padding: 10px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.td {
+  padding: 10px;
+  vertical-align: top;
+}
+
+.badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.positive {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.neutral {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.negative {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.unknown {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+.deleteBtn {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}

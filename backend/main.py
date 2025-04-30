@@ -58,9 +58,11 @@ sentiment_pipeline = pipeline("sentiment-analysis")
 class Feedback(BaseModel):
     message: str
     session_id: str = None
+    category: str = None
 
 @app.post("/submit-feedback")
 def submit_feedback(feedback: Feedback):
+    print("Received feedback:", feedback)
     try:
         session_id = feedback.session_id if feedback.session_id else str(uuid4())
 

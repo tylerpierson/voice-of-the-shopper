@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "./AdminPage.css";
+import style from "./AdminPage.module.scss";
 
 function AdminPage() {
   const [feedbackList, setFeedbackList] = useState([]);
@@ -107,3 +107,4 @@ const styles = {
 };
 
 export default AdminPage;
+
