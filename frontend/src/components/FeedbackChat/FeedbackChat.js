@@ -7,7 +7,7 @@ const categories = [
   "Store Experience", "Promotions", "Sustainability", "Family-Friendliness"
 ];
 
-function FeedbackChat({ toggleAdmin, userName }) {
+function FeedbackChat({ toggleAdmin, userName, resetUserName = () => {} }) {
   const [messages, setMessages] = useState([
     { sender: "assistant", text: "👋 Hi there! Please select a category and tell me about your experience." }
   ]);
@@ -76,6 +76,8 @@ function FeedbackChat({ toggleAdmin, userName }) {
     } catch (error) {
       console.error("Finalization error:", error);
     }
+    setInput("");
+    if (typeof resetUserName === "function") resetUserName();
     toggleAdmin();
   };
 

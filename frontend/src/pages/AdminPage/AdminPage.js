@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.scss";
 
 const categories = [
@@ -6,30 +7,31 @@ const categories = [
   "Store Experience", "Promotions", "Sustainability", "Family-Friendliness"
 ];
 
-function AdminPage() {
+function AdminPage({ onBackToChatbot }) {
   const [feedbackList, setFeedbackList] = useState([]);
   const [activeCategory, setActiveCategory] = useState("View All");
-  const [newFeedbackCounts, setNewFeedbackCounts] = useState({});
-  const [seenSummaries, setSeenSummaries] = useState(new Set());
+  const [unseenCounts, setUnseenCounts] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("http://localhost:8000/get-summaries")
       .then((res) => res.json())
       .then((data) => {
-        setFeedbackList(data);
+        const seenSessions = JSON.parse(localStorage.getItem("seenSessions") || "{}");
+        const unseenCount = {};
 
-        const counts = {};
-        categories.forEach((cat) => {
-          if (cat === "View All") return;
-          const unseen = data.filter(
-            (fb) => fb.department === cat && !seenSummaries.has(fb.session_id)
-          );
-          if (unseen.length > 0) counts[cat] = unseen.length;
+        data.forEach((summary) => {
+          const { department, session_id, seen } = summary;
+          if (!seenSessions[session_id] && !seen) {
+            unseenCount[department] = (unseenCount[department] || 0) + 1;
+          }
         });
-        setNewFeedbackCounts(counts);
+
+        setUnseenCounts(unseenCount);
+        setFeedbackList(data);
       })
       .catch((err) => console.error("Error fetching feedbacks:", err));
-  }, [seenSummaries]);
+  }, []);
 
   const deleteSummary = async (session_id) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this feedback?");
@@ -40,7 +42,6 @@ function AdminPage() {
         method: "DELETE",
       });
       setFeedbackList((prev) => prev.filter((fb) => fb.session_id !== session_id));
-      setSeenSummaries((prev) => new Set([...prev].filter((id) => id !== session_id)));
     } catch (err) {
       console.error("Error deleting summary:", err);
     }
@@ -72,19 +73,36 @@ function AdminPage() {
     return acc;
   }, {});
 
-  const handleTabClick = (cat) => {
+  const handleTabClick = async (cat) => {
     setActiveCategory(cat);
+
     if (cat !== "View All") {
-      const seen = feedbackList
-        .filter((fb) => fb.department === cat)
-        .map((fb) => fb.session_id);
-      setSeenSummaries((prev) => new Set([...prev, ...seen]));
-      setNewFeedbackCounts((prev) => {
-        const updated = { ...prev };
-        delete updated[cat];
-        return updated;
-      });
+      try {
+        await fetch(`http://localhost:8000/mark-seen/${cat}`, {
+          method: "POST",
+        });
+
+        const updatedSeenSessions = JSON.parse(localStorage.getItem("seenSessions") || "{}");
+        feedbackList.forEach((fb) => {
+          if (fb.department === cat) {
+            updatedSeenSessions[fb.session_id] = true;
+          }
+        });
+        localStorage.setItem("seenSessions", JSON.stringify(updatedSeenSessions));
+
+        setUnseenCounts((prev) => {
+          const updated = { ...prev };
+          delete updated[cat];
+          return updated;
+        });
+      } catch (err) {
+        console.error("Failed to mark as seen:", err);
+      }
     }
+  };
+
+  const goToConversationPage = (session_id) => {
+    navigate(`/conversation/${session_id}`);
   };
 
   return (
@@ -99,8 +117,8 @@ function AdminPage() {
             onClick={() => handleTabClick(cat)}
           >
             {cat}
-            {cat !== "View All" && newFeedbackCounts[cat] && (
-              <span className={styles.notificationDot}>{newFeedbackCounts[cat]}</span>
+            {cat !== "View All" && unseenCounts[cat] && (
+              <span className={styles.notificationDot}>{unseenCounts[cat]}</span>
             )}
           </button>
         ))}
@@ -125,9 +143,13 @@ function AdminPage() {
             <tbody>
               {groupedBySentiment[sentiment].map((fb) => (
                 <tr key={fb.session_id}>
-                  <td className={styles.td}>{fb.summary}</td>
                   <td className={styles.td}>
-                    <span className={{ ...styles.badge, ...getSentimentStyle(fb.sentiment) }}>
+                    <button onClick={() => goToConversationPage(fb.session_id)} className={styles.summaryButton}>
+                      {fb.summary}
+                    </button>
+                  </td>
+                  <td className={styles.td}>
+                    <span style={getSentimentStyle(fb.sentiment)} className={styles.badge}>
                       {fb.sentiment}
                     </span>
                   </td>
@@ -138,7 +160,7 @@ function AdminPage() {
                       Delete
                     </button>
                   </td>
-                </tr>              
+                </tr>
               ))}
             </tbody>
           </table>

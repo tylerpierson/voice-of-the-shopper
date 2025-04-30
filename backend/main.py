@@ -194,6 +194,15 @@ def mark_seen(category: str = Path(..., title="Category name")):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+@app.get("/conversation/{session_id}")
+def get_conversation(session_id: str):
+    cursor = conn.execute(
+        "SELECT role, text FROM chat_messages WHERE session_id = ? ORDER BY timestamp",
+        (session_id,)
+    )
+    return [{"role": row[0], "text": row[1]} for row in cursor.fetchall()]
+
+
 @app.delete("/delete-summary/{session_id}")
 def delete_summary(session_id: str):
     conn.execute("DELETE FROM feedback_summary WHERE session_id = ?", (session_id,))
