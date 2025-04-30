@@ -31,22 +31,6 @@ You need the following installed:
 
 ---
 
-## 🐍 Backend Setup (FastAPI + SQLite + Transformers)
-
-```bash
-# 1. Navigate to backend
-cd backend
-
-# 2. Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Run the FastAPI server
-uvicorn main:app --reload
-
 ## 🐍 Ollama Setup
 
 # 1. Start Ollama (in a separate terminal if needed)
@@ -65,3 +49,19 @@ npm install
 # 3. Start the React development server
 npm start
 
+
+## 🐍 Backend Setup (FastAPI + SQLite + Transformers)
+
+```bash
+# 1. Navigate to backend
+cd backend
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Run the FastAPI server
+uvicorn main:app --reload
