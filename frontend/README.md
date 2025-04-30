@@ -33,20 +33,20 @@ You need the following installed:
 
 ## 🐍 Ollama Setup
 
-# 1. Start Ollama (in a separate terminal if needed)
+1. Start Ollama (in a separate terminal if needed)
 ollama serve
 
-# 2. Pull the Mistral model
+2. Pull the Mistral model
 ollama pull mistral
 
 ## Frontend Setup (React)
-# 1. Navigate to frontend
+1. Navigate to frontend
 cd ../frontend
 
-# 2. Install dependencies
+2. Install dependencies
 npm install
 
-# 3. Start the React development server
+3. Start the React development server
 npm start
 
 
