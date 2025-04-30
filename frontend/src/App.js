@@ -9,15 +9,18 @@ import {
 import FeedbackChat from "./components/FeedbackChat/FeedbackChat";
 import AdminPage from "./pages/AdminPage/AdminPage";
 import ConversationPage from "./pages/ConversationPage/ConversationPage";
+import ProgressiveOnboarding from "./components/ProgressiveOnboarding/ProgressiveOnboarding";
 import styles from "./App.module.scss";
 
 function AppWrapper() {
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [submittedName, setSubmittedName] = useState(null);
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleResetUserName = () => {
+    setShowOnboarding(true);
     setSubmittedName(null);
     setUsername("");
     navigate("/");
@@ -26,8 +29,7 @@ function AppWrapper() {
   const renderHeader = () => (
     <div className={styles.header}>
       <img src="/img/vos_logo.png" alt="Voice of the Shopper" className={styles.logo} />
-  
-      {/* Show Go to Admin from Chat */}
+
       {location.pathname === "/" && submittedName && (
         <button
           className={styles.backButton}
@@ -37,8 +39,7 @@ function AppWrapper() {
           Go to Admin Dashboard
         </button>
       )}
-  
-      {/* Show Back to Chatbot from Admin */}
+
       {location.pathname === "/admin" && (
         <button
           className={styles.backButton}
@@ -48,8 +49,7 @@ function AppWrapper() {
           Back to Chatbot
         </button>
       )}
-  
-      {/* Show Back to Admin from Conversation */}
+
       {location.pathname.startsWith("/conversation") && (
         <button
           className={styles.backButton}
@@ -60,7 +60,7 @@ function AppWrapper() {
         </button>
       )}
     </div>
-  );  
+  );
 
   return (
     <>
@@ -70,7 +70,9 @@ function AppWrapper() {
         <Route
           path="/"
           element={
-            submittedName ? (
+            showOnboarding ? (
+              <ProgressiveOnboarding onFinish={() => setShowOnboarding(false)} />
+            ) : submittedName ? (
               <FeedbackChat
                 toggleAdmin={() => navigate("/admin")}
                 userName={submittedName}
@@ -112,7 +114,6 @@ function AppWrapper() {
             )
           }
         />
-
         <Route path="/admin" element={<AdminPage onBackToChatbot={handleResetUserName} />} />
         <Route path="/conversation/:sessionId" element={<ConversationPage />} />
       </Routes>
@@ -120,7 +121,6 @@ function AppWrapper() {
   );
 }
 
-// 👇 Wrap AppWrapper in <Router> here
 function App() {
   return (
     <Router>

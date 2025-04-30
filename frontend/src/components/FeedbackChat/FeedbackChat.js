@@ -7,7 +7,7 @@ const categories = [
   "Store Experience", "Promotions", "Sustainability", "Family-Friendliness"
 ];
 
-function FeedbackChat({ toggleAdmin, userName, resetUserName = () => {} }) {
+function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
   const [messages, setMessages] = useState([
     { sender: "assistant", text: "👋 Hi there! Please select a category and tell me about your experience." }
   ]);
@@ -15,6 +15,8 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName = () => {} }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [wantsContact, setWantsContact] = useState(false);
 
   const chatEndRef = useRef(null);
 
@@ -22,7 +24,7 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName = () => {} }) {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const sendMessage = async (text, categoryOverride = null) => {
+  const sendMessage = async (text) => {
     const newMessages = [...messages, { sender: "user", text }];
     setMessages(newMessages);
     setInput("");
@@ -32,7 +34,7 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName = () => {} }) {
       message: text,
       user_name: userName,
       session_id: sessionId,
-      category: categoryOverride || selectedCategory
+      category: selectedCategory
     };
 
     try {
@@ -54,8 +56,7 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName = () => {} }) {
 
   const handleCategorySelect = (cat) => {
     setSelectedCategory(cat);
-    const intro = `I'd like to give feedback about ${cat.toLowerCase()}.`;
-    sendMessage(intro, cat);
+    sendMessage(`I'd like to give feedback about ${cat.toLowerCase()}.`);
   };
 
   const handleSubmit = (e) => {
@@ -63,23 +64,56 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName = () => {} }) {
     if (input.trim()) sendMessage(input);
   };
 
-  const handleToggleAdmin = async () => {
-    if (!sessionId) return;
+  const finalizeFeedback = async () => {
     try {
       await fetch(`http://localhost:8000/finalize-summary/${sessionId}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ user_name: userName, category: selectedCategory })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_name: userName })
       });
+      setShowThankYou(true);
     } catch (error) {
       console.error("Finalization error:", error);
+      alert("❌ Failed to finalize feedback.");
     }
-    setInput("");
-    if (typeof resetUserName === "function") resetUserName();
-    toggleAdmin();
   };
+
+  const resetToStart = () => {
+    setMessages([
+      { sender: "assistant", text: "👋 Hi there! Please select a category and tell me about your experience." }
+    ]);
+    setInput("");
+    setSelectedCategory(null);
+    setSessionId(null);
+    setIsTyping(false);
+    setShowThankYou(false);
+    setWantsContact(false);
+  };
+
+  if (showThankYou) {
+    return (
+      <div className={style.container}>
+        <div className={style.thankYouCard}>
+          <h2>🎉 Thank you for your input!</h2>
+          <p>We truly appreciate your feedback.</p>
+          <label className={style.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={wantsContact}
+              onChange={() => setWantsContact(!wantsContact)}
+            />
+            Would you like to be contacted?
+          </label>
+          <button
+            className={style.finishButton}
+            onClick={resetToStart}
+          >
+            Leave More Feedback
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={style.container}>
@@ -116,29 +150,7 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName = () => {} }) {
         </button>
       </form>
 
-      <button onClick={handleToggleAdmin} className={style.toggleButton}>
-        Go to Admin Dashboard
-      </button>
-
-      <button
-        className={style.finishButton}
-        onClick={async () => {
-          try {
-            const response = await fetch(`http://localhost:8000/finalize-summary/${sessionId}`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({ user_name: userName, category: selectedCategory })
-            });
-            const data = await response.json();
-            alert("✅ Feedback finalized and saved!");
-          } catch (error) {
-            console.error("Finalization error:", error);
-            alert("❌ Failed to finalize feedback.");
-          }
-        }}
-      >
+      <button onClick={finalizeFeedback} className={style.finishButton}>
         Finish Feedback
       </button>
     </div>
