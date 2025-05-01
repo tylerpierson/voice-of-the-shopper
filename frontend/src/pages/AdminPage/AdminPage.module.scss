@@ -172,3 +172,21 @@
   font-weight: bold;
 }
 
+.reportBtn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  margin-left: 0.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.85rem;
+
+  &:hover {
+    background-color: #3e8e41;
+  }
+}
+
+.reportContainer {
+  margin-top: 2rem;
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.scss";
+import ActionPlan from "../../components/ActionPlan/ActionPlan";
 
 const categories = [
   "View All", "Taste", "Packaging", "Price", "Availability",
@@ -15,6 +16,7 @@ function AdminPage({ onBackToChatbot }) {
   const [filterSentiment, setFilterSentiment] = useState("");
   const [sortKey, setSortKey] = useState("timestamp");
   const [sortDirection, setSortDirection] = useState("desc");
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
 
   const navigate = useNavigate();
   const sentiments = ["positive", "neutral", "negative"];
@@ -322,11 +324,27 @@ function AdminPage({ onBackToChatbot }) {
                 >
                   Delete
                 </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedSessionId(fb.session_id);
+                  }}
+                  className={styles.reportBtn}
+                >
+                  Build Report
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {selectedSessionId && (
+        <ActionPlan
+          sessionId={selectedSessionId}
+          onClose={() => setSelectedSessionId(null)}
+        />
+      )}
     </div>
   );
 }

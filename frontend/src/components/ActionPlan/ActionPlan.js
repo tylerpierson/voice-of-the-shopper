@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import styles from "./ActionPlan.module.scss";
-import ImpactAssessment from "../ImpactAssessment/ImpactAssessment";
 
-function ActionPlan({ sessionId }) {
+function ActionPlan({ sessionId, onClose }) {
   const [steps, setSteps] = useState([]);
   const [impactEffortMap, setImpactEffortMap] = useState({});
   const [loading, setLoading] = useState(true);
@@ -15,15 +14,14 @@ function ActionPlan({ sessionId }) {
         const data = await res.json();
         const planText = data.action_plan || "";
 
-        // Split into individual steps
         const stepLines = planText
-          .split("\n")
-          .map(line => line.trim())
-          .filter(line => line.length > 0 && /[a-zA-Z]/.test(line));
+        .split("\n")
+        .map(line => line.trim())
+        .filter(line => line.length > 0 && /[a-zA-Z]/.test(line))
+        .slice(0, 5);
 
         setSteps(stepLines);
 
-        // Assess each step
         stepLines.forEach(async (step, idx) => {
           const [impactRes, effortRes] = await Promise.all([
             fetch("http://localhost:8000/assess-impact", {
@@ -57,32 +55,36 @@ function ActionPlan({ sessionId }) {
     fetchData();
   }, [sessionId]);
 
-  const toggleExpand = () => {
-    setExpanded(prev => !prev);
-  };
+  const toggleExpand = () => setExpanded(prev => !prev);
 
-  if (loading) return <p className={styles.loading}>Generating action plan...</p>;
+  if (loading) return <p className={styles.loading}>Generating Report...</p>;
   if (!steps.length) return null;
 
   return (
     <div className={`${styles.actionPlanCard} ${expanded ? styles.expanded : ""}`}>
-      <button className={styles.expandButton} onClick={toggleExpand}>
-        {expanded ? "Collapse" : "Expand"}
-      </button>
-      <h3>AI-Generated Action Plan</h3>
+        <div className={styles.topControls}>
+            <button className={styles.expandButton} onClick={toggleExpand}>
+            {expanded ? "Collapse" : "Expand"}
+            </button>
+            <button className={styles.closeButton} onClick={() => setSteps([])}>
+            Close Report
+            </button>
+        </div>
 
-      <ul>
-        {steps.map((step, idx) => (
-          <li key={idx}>
-            <p>{step}</p>
-            <div className={styles.metaInfo}>
-              <span className={styles.metaTag}>Impact: {impactEffortMap[idx]?.impact || "..."}</span>
-              <span className={styles.metaTag}>Effort: {impactEffortMap[idx]?.effort || "..."}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+        <h3>Action Plan</h3>
+
+        <ul>
+            {steps.map((step, idx) => (
+            <li key={idx}>
+                <p>{step}</p>
+                <div className={styles.metaInfo}>
+                <span className={styles.metaTag}>Impact: {impactEffortMap[idx]?.impact || "..."}</span>
+                <span className={styles.metaTag}>Effort: {impactEffortMap[idx]?.effort || "..."}</span>
+                </div>
+            </li>
+            ))}
+        </ul>
+        </div>
   );
 }
 

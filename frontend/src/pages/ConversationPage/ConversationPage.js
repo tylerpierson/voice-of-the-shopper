@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./ConversationPage.module.scss";
-import ActionPlan from "../../components/ActionPlan/ActionPlan";
 
 function ConversationPage() {
   const { sessionId } = useParams();
@@ -37,10 +36,6 @@ function ConversationPage() {
             ))}
           </div>
         </div>
-      </div>
-  
-      <div className={styles.actionPlanContainer}>
-        <ActionPlan sessionId={sessionId} />
       </div>
     </div>
   );  

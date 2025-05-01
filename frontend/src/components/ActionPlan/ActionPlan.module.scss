@@ -10,7 +10,7 @@
     border-top: 1px solid #ddd;
     box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
-    z-index: 999; // ensures it's above other elements
+    z-index: 999;
   }
   
   .expanded {
@@ -22,10 +22,18 @@
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   }
   
-  .expandButton {
+  .topControls {
     position: absolute;
     top: 10px;
     right: 16px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    z-index: 2;
+  }
+  
+  .expandButton,
+  .closeButton {
     background-color: #007bff;
     color: white;
     border: none;
@@ -34,14 +42,22 @@
     font-size: 0.85rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
+  }
+  
+  .expandButton:hover {
+    background-color: #0056b3;
+  }
+  
+  .closeButton {
+    background-color: #dc3545;
   
     &:hover {
-      background-color: #0056b3;
+      background-color: #c82333;
     }
   }
   
   h3 {
-    margin-top: 0;
+    margin-top: 2.5rem; // ensures no overlap with the buttons
     margin-bottom: 0.75rem;
     font-size: 1.25rem;
     color: #2a4d8f;
