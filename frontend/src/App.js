@@ -88,27 +88,18 @@ function AppWrapper() {
                     if (username.trim()) setSubmittedName(username.trim());
                   }}
                 >
-                  <input
-                    type="text"
-                    placeholder="Enter Your name"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    style={{ padding: "10px", fontSize: "16px", marginRight: "10px" }}
-                  />
-                  <button
-                    type="submit"
-                    style={{
-                      padding: "10px 20px",
-                      fontSize: "16px",
-                      backgroundColor: "#007bff",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Start
-                  </button>
+                  <div className={styles.inputGroup}>
+                    <input
+                      type="text"
+                      placeholder="Enter Your name"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                    />
+                    <button type="submit" className={styles.startButton}>Start</button>
+                    <button type="button" className={styles.skipButton} onClick={() => setSubmittedName("Anonymous")}>
+                      Skip
+                    </button>
+                  </div>
                 </form>
               </div>
             )

@@ -1,11 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import style from "./FeedbackChat.module.scss";
 import ChatMessage from "../ChatMessage/ChatMessage";
+import Confetti from "react-confetti";
 
 const categories = [
   "Taste", "Packaging", "Price", "Availability",
   "Store Experience", "Promotions", "Sustainability", "Family-Friendliness"
 ];
+
+const categoryPrompts = {
+    Taste: ["The flavor was great!", "It was too salty.", "Loved the freshness.", "Could be more seasoned."],
+    Packaging: ["The box was damaged.", "Loved the eco-friendly packaging.", "Too much plastic.", "Easy to open."],
+    Price: ["Great value for money.", "Too expensive.", "Affordable and worth it.", "Could be cheaper."],
+    Availability: ["Item was out of stock.", "Easy to find.", "Not available in my area.", "Restocked quickly."],
+    "Store Experience": ["Helpful staff.", "Checkout took too long.", "Store was clean.", "Great atmosphere."],
+    Promotions: ["Good deals available.", "Promo was unclear.", "Loved the discount.", "Offer expired too quickly."],
+    Sustainability: ["Love the eco-focus.", "Could use less plastic.", "Sustainable options are great.", "More green products please."],
+    "Family-Friendliness": ["Kids loved it!", "Great for families.", "Not suitable for children.", "Fun for all ages."]
+  };  
 
 function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
   const [messages, setMessages] = useState([
@@ -17,12 +29,17 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
   const [isTyping, setIsTyping] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
   const [wantsContact, setWantsContact] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const chatEndRef = useRef(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  const handlePromptSelect = (prompt) => {
+    sendMessage(prompt);
+  };  
 
   const sendMessage = async (text) => {
     const newMessages = [...messages, { sender: "user", text }];
@@ -73,8 +90,9 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
               user_name: userName,
               category: selectedCategory  // ✅ send this!
             })
-          });          
-      setShowThankYou(true);
+          });    
+          setShowConfetti(true);
+            setTimeout(() => setShowThankYou(true), 1500);      
     } catch (error) {
       console.error("Finalization error:", error);
       alert("❌ Failed to finalize feedback.");
@@ -96,17 +114,10 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
   if (showThankYou) {
     return (
       <div className={style.container}>
+        {showConfetti && <Confetti numberOfPieces={250} recycle={false} />}
         <div className={style.thankYouCard}>
           <h2>🎉 Thank you for your input!</h2>
           <p>We truly appreciate your feedback.</p>
-          <label className={style.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={wantsContact}
-              onChange={() => setWantsContact(!wantsContact)}
-            />
-            Would you like to be contacted?
-          </label>
           <button
             className={style.finishButton}
             onClick={resetToStart}
@@ -139,6 +150,20 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
         {isTyping && <ChatMessage sender="assistant" text={<TypingDots />} />}
         <div ref={chatEndRef} />
       </div>
+
+      {selectedCategory && categoryPrompts[selectedCategory] && (
+            <div className={style.prompts}>
+                {categoryPrompts[selectedCategory].map((prompt, index) => (
+                <button
+                    key={index}
+                    className={style.promptButton}
+                    onClick={() => handlePromptSelect(prompt)}
+                >
+                    {prompt}
+                </button>
+                ))}
+            </div>
+            )}
 
       <form onSubmit={handleSubmit} className={style.inputForm}>
         <input

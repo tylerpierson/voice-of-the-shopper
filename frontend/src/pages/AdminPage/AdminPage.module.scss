@@ -3,21 +3,38 @@
   font-family: 'Segoe UI', sans-serif;
   background-color: #f9f9f9;
   min-height: 100vh;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 }
 
 .title {
   font-size: 2rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   text-align: center;
   color: #333;
 }
 
 .tabs {
   display: flex;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 2rem;
-  justify-content: center;
+  padding: 10px 0;
+
+  @media (max-width: 768px) {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
 }
 
 .tabButton {
@@ -34,6 +51,12 @@
   &:hover {
     background-color: #ccc;
   }
+
+  @media (max-width: 768px) {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
 }
 
 .activeTab {
@@ -47,8 +70,8 @@
 
 .notificationDot {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: -6px;
+  right: -6px;
   background-color: red;
   color: white;
   border-radius: 50%;
@@ -65,6 +88,11 @@
   padding: 8px 12px;
   margin-bottom: 1rem;
   border-radius: 4px;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    padding: 6px 10px;
+  }
 }
 
 .table {
@@ -74,17 +102,31 @@
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
   border-radius: 6px;
   overflow: hidden;
+  font-size: 0.95rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+    table-layout: fixed;
+  }
 }
 
 .table th,
 .table td {
   padding: 12px 16px;
   text-align: left;
+
+  @media (max-width: 768px) {
+    padding: 8px 10px;
+  }
 }
 
 .table th {
   background-color: #f0f0f0;
   color: #555;
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+  }
 }
 
 .table tbody tr {
@@ -97,14 +139,11 @@
   }
 }
 
-.summaryButton {
-  all: unset;
-  color: #007bff;
-  font-weight: 500;
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
+// Hide Summary Column in Mobile
+@media (max-width: 768px) {
+  .table td:first-child,
+  .table th:first-child {
+    display: none;
   }
 }
 
@@ -129,5 +168,10 @@
 
   &:hover {
     background-color: #b52a37;
+  }
+
+  @media (max-width: 768px) {
+    padding: 5px 10px;
+    font-size: 0.8rem;
   }
 }
