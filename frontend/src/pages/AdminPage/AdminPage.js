@@ -11,7 +11,13 @@ function AdminPage({ onBackToChatbot }) {
   const [feedbackList, setFeedbackList] = useState([]);
   const [activeCategory, setActiveCategory] = useState("View All");
   const [unseenCounts, setUnseenCounts] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterSentiment, setFilterSentiment] = useState("");
+  const [sortKey, setSortKey] = useState("timestamp");
+  const [sortDirection, setSortDirection] = useState("desc");
+
   const navigate = useNavigate();
+  const sentiments = ["positive", "neutral", "negative"];
 
   useEffect(() => {
     fetch("http://localhost:8000/get-summaries")
@@ -49,42 +55,31 @@ function AdminPage({ onBackToChatbot }) {
 
   const getSentimentStyle = (sentiment) => {
     switch (sentiment.toLowerCase()) {
-      case "positive":
-        return { backgroundColor: "#d4edda", color: "#155724" };
-      case "neutral":
-        return { backgroundColor: "#fff3cd", color: "#856404" };
-      case "negative":
-        return { backgroundColor: "#f8d7da", color: "#721c24" };
-      default:
-        return { backgroundColor: "#e2e3e5", color: "#383d41" };
+      case "positive": return { backgroundColor: "#d4edda", color: "#155724" };
+      case "neutral": return { backgroundColor: "#fff3cd", color: "#856404" };
+      case "negative": return { backgroundColor: "#f8d7da", color: "#721c24" };
+      default: return { backgroundColor: "#e2e3e5", color: "#383d41" };
     }
   };
 
-  const sentiments = ["positive", "neutral", "negative"];
-
-  const filteredFeedbacks = activeCategory === "View All"
-    ? feedbackList
-    : feedbackList.filter((fb) => fb.department === activeCategory);
-
-  const groupedBySentiment = sentiments.reduce((acc, sentiment) => {
-    acc[sentiment] = filteredFeedbacks.filter(
-      (fb) => fb.sentiment.toLowerCase() === sentiment
-    );
-    return acc;
-  }, {});
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+  };
 
   const handleTabClick = async (cat) => {
-    setActiveCategory(cat);
+    const category = cat || "View All";
+    setActiveCategory(category);
 
-    if (cat !== "View All") {
+    if (category !== "View All") {
       try {
-        await fetch(`http://localhost:8000/mark-seen/${cat}`, {
+        await fetch(`http://localhost:8000/mark-seen/${category}`, {
           method: "POST",
         });
 
         const updatedSeenSessions = JSON.parse(localStorage.getItem("seenSessions") || "{}");
         feedbackList.forEach((fb) => {
-          if (fb.department === cat) {
+          if (fb.department === category) {
             updatedSeenSessions[fb.session_id] = true;
           }
         });
@@ -92,7 +87,7 @@ function AdminPage({ onBackToChatbot }) {
 
         setUnseenCounts((prev) => {
           const updated = { ...prev };
-          delete updated[cat];
+          delete updated[category];
           return updated;
         });
       } catch (err) {
@@ -101,9 +96,59 @@ function AdminPage({ onBackToChatbot }) {
     }
   };
 
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDirection("asc");
+    }
+  };
+
   const goToConversationPage = (session_id) => {
     navigate(`/conversation/${session_id}`);
   };
+
+  const filteredFeedbacks = feedbackList.filter((fb) => {
+    const matchesQuery =
+      fb.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (fb.user_name || "anonymous").toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesSentiment = filterSentiment
+      ? fb.sentiment.toLowerCase() === filterSentiment.toLowerCase()
+      : true;
+
+    const matchesCategory =
+      activeCategory === "View All" || fb.department === activeCategory;
+
+    return matchesQuery && matchesSentiment && matchesCategory;
+  });
+
+  const sortedFeedbacks = [...filteredFeedbacks].sort((a, b) => {
+    const valA = a[sortKey] || "";
+    const valB = b[sortKey] || "";
+
+    const getRank = (sentiment) => {
+      switch ((sentiment || "").toLowerCase()) {
+        case "positive": return 1;
+        case "neutral": return 2;
+        case "negative": return 3;
+        default: return 4;
+      }
+    };
+
+    let result = 0;
+
+    if (sortKey === "sentiment") {
+      result = getRank(valA) - getRank(valB);
+    } else if (sortKey === "timestamp") {
+      result = new Date(valA) - new Date(valB);
+    } else {
+      result = String(valA).localeCompare(String(valB));
+    }
+
+    return sortDirection === "asc" ? result : -result;
+  });
 
   return (
     <div className={styles.container}>
@@ -124,54 +169,164 @@ function AdminPage({ onBackToChatbot }) {
         ))}
       </div>
 
-      {sentiments.map((sentiment) => (
-        <div key={sentiment} className={styles.sentimentSection}>
-          <h2 className={styles.sentimentHeader} style={getSentimentStyle(sentiment)}>
-            {sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} Feedback
-          </h2>
+      <div className={styles.filters}>
+        <input
+          type="text"
+          placeholder="Search by user or summary..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className={styles.searchInput}
+        />
 
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Summary</th>
-                <th>Sentiment</th>
-                <th>Category</th>
-                <th>User</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {groupedBySentiment[sentiment].map((fb) => (
-                <tr
-                  key={fb.session_id}
-                  className={styles.clickableRow}
-                  onClick={() => goToConversationPage(fb.session_id)}
+        <select
+          value={activeCategory === "View All" ? "" : activeCategory}
+          onChange={(e) => handleTabClick(e.target.value || "View All")}
+          className={styles.dropdown}
+        >
+          <option value="">All Categories</option>
+          {categories.filter((c) => c !== "View All").map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+
+        <select
+          value={filterSentiment}
+          onChange={(e) => setFilterSentiment(e.target.value)}
+          className={styles.dropdown}
+        >
+          <option value="">All Sentiments</option>
+          {sentiments.map((s) => (
+            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+          ))}
+        </select>
+      </div>
+
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th>
+              <div
+                className={styles.sortHeader}
+                onClick={() => handleSort("timestamp")}
+              >
+                Date
+                <span
+                  className={`${styles.sortArrow} ${
+                    sortKey === "timestamp" && sortDirection === "asc" ? styles.activeArrow : ""
+                  }`}
                 >
-                  <td className={styles.td}>{fb.summary}</td>
-                  <td className={styles.td}>
-                    <span style={getSentimentStyle(fb.sentiment)} className={styles.badge}>
-                      {fb.sentiment}
-                    </span>
-                  </td>
-                  <td className={styles.td}>{fb.department}</td>
-                  <td className={styles.td}>{fb.user_name || "Anonymous"}</td>
-                  <td className={styles.td}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation(); // prevent row click from triggering
-                        deleteSummary(fb.session_id);
-                      }}
-                      className={styles.deleteBtn}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>              
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
+                  ▲
+                </span>
+                <span
+                  className={`${styles.sortArrow} ${
+                    sortKey === "timestamp" && sortDirection === "desc" ? styles.activeArrow : ""
+                  }`}
+                >
+                  ▼
+                </span>
+              </div>
+            </th>
+            <th>Summary</th>
+            <th>
+              <div
+                className={styles.sortHeader}
+                onClick={() => handleSort("sentiment")}
+              >
+                Sentiment
+                <span
+                  className={`${styles.sortArrow} ${
+                    sortKey === "sentiment" && sortDirection === "asc" ? styles.activeArrow : ""
+                  }`}
+                >
+                  ▲
+                </span>
+                <span
+                  className={`${styles.sortArrow} ${
+                    sortKey === "sentiment" && sortDirection === "desc" ? styles.activeArrow : ""
+                  }`}
+                >
+                  ▼
+                </span>
+              </div>
+            </th>
+            <th>
+              <div
+                className={styles.sortHeader}
+                onClick={() => handleSort("department")}
+              >
+                Category
+                <span
+                  className={`${styles.sortArrow} ${
+                    sortKey === "department" && sortDirection === "asc" ? styles.activeArrow : ""
+                  }`}
+                >
+                  ▲
+                </span>
+                <span
+                  className={`${styles.sortArrow} ${
+                    sortKey === "department" && sortDirection === "desc" ? styles.activeArrow : ""
+                  }`}
+                >
+                  ▼
+                </span>
+              </div>
+            </th>
+            <th>
+              <div
+                className={styles.sortHeader}
+                onClick={() => handleSort("user_name")}
+              >
+                User
+                <span
+                  className={`${styles.sortArrow} ${
+                    sortKey === "user_name" && sortDirection === "asc" ? styles.activeArrow : ""
+                  }`}
+                >
+                  ▲
+                </span>
+                <span
+                  className={`${styles.sortArrow} ${
+                    sortKey === "user_name" && sortDirection === "desc" ? styles.activeArrow : ""
+                  }`}
+                >
+                  ▼
+                </span>
+              </div>
+            </th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sortedFeedbacks.map((fb) => (
+            <tr
+              key={fb.session_id}
+              className={styles.clickableRow}
+              onClick={() => goToConversationPage(fb.session_id)}
+            >
+              <td className={styles.td}>{formatDate(fb.timestamp)}</td>
+              <td className={styles.td}>{fb.summary}</td>
+              <td className={styles.td}>
+                <span style={getSentimentStyle(fb.sentiment)} className={styles.badge}>
+                  {fb.sentiment}
+                </span>
+              </td>
+              <td className={styles.td}>{fb.department}</td>
+              <td className={styles.td}>{fb.user_name || "Anonymous"}</td>
+              <td className={styles.td}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteSummary(fb.session_id);
+                  }}
+                  className={styles.deleteBtn}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

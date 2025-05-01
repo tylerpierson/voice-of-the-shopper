@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi import Path
+from fastapi import Path, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -8,6 +8,7 @@ import sqlite3
 import requests
 from typing import Optional
 from uuid import uuid4
+import ast
 
 app = FastAPI()
 
@@ -46,7 +47,6 @@ CREATE TABLE IF NOT EXISTS feedback_summary (
 )
 ''')
 
-# Add columns if they don’t exist
 try:
     conn.execute("ALTER TABLE feedback_summary ADD COLUMN sentiment TEXT")
 except sqlite3.OperationalError:
@@ -72,7 +72,6 @@ class Feedback(BaseModel):
     session_id: Optional[str] = None
     category: Optional[str] = None
     user_name: Optional[str] = None
-
 
 @app.post("/submit-feedback")
 def submit_feedback(feedback: Feedback):
@@ -142,14 +141,13 @@ def summarize_conversation(session_id: str):
 
 class FinalizePayload(BaseModel):
     user_name: str
-    category: str = None  # ✅ optional but preferred over classification
+    category: str = None
 
 @app.post("/finalize-summary/{session_id}")
 def finalize_summary(session_id: str, payload: FinalizePayload):
     result = summarize_conversation(session_id)
     summary = result['summary']
-    
-    # ✅ Use provided category, or fallback
+
     department = payload.category or classify_department(summary)
 
     user_texts = conn.execute(
@@ -168,22 +166,22 @@ def finalize_summary(session_id: str, payload: FinalizePayload):
 
     return {"summary": summary, "department": department, "sentiment": sentiment}
 
-
 @app.get("/get-summaries")
 def get_summaries():
     cursor = conn.execute(
-        "SELECT session_id, summary, department, sentiment, seen, user_name FROM feedback_summary ORDER BY timestamp DESC"
+        "SELECT session_id, summary, department, sentiment, seen, user_name, timestamp FROM feedback_summary ORDER BY timestamp DESC"
     )
     results = []
     for row in cursor.fetchall():
-        session_id, summary, department, sentiment, seen, user_name = row
+        session_id, summary, department, sentiment, seen, user_name, timestamp = row
         results.append({
             "session_id": session_id,
             "summary": summary,
             "department": department,
             "sentiment": sentiment or "Unknown",
             "seen": bool(seen),
-            "user_name": user_name or "Anonymous"
+            "user_name": user_name or "Anonymous",
+            "timestamp": timestamp
         })
     return results
 
@@ -207,9 +205,110 @@ def get_conversation(session_id: str):
     )
     return [{"role": row[0], "text": row[1]} for row in cursor.fetchall()]
 
-
 @app.delete("/delete-summary/{session_id}")
 def delete_summary(session_id: str):
     conn.execute("DELETE FROM feedback_summary WHERE session_id = ?", (session_id,))
     conn.commit()
     return {"status": "deleted"}
+
+@app.get("/generate-action-plan/{session_id}")
+def generate_action_plan(session_id: str):
+    cursor = conn.execute(
+        "SELECT role, text FROM chat_messages WHERE session_id = ? ORDER BY timestamp",
+        (session_id,)
+    )
+    conversation = cursor.fetchall()
+
+    full_text = ""
+    for role, text in conversation:
+        prefix = "User:" if role == "user" else "Assistant:"
+        full_text += f"{prefix} {text}\n"
+
+    prompt = (
+        "You are an operations analyst. Read the following user feedback conversation "
+        "and generate a concise action plan that either resolves the issue or improves "
+        "future customer satisfaction. Be specific and practical:\n\n"
+        f"{full_text}\n\nAction Plan:"
+    )
+
+    response = requests.post("http://localhost:11434/v1/chat/completions", json={
+        "model": "mistral",
+        "messages": [{"role": "user", "content": prompt}]
+    })
+
+    return {"action_plan": response.json()['choices'][0]['message']['content']}
+
+@app.post("/assess-impact-effort")
+def assess_impact_effort(payload: dict = Body(...)):
+    step = payload.get("action_plan", "")
+
+    prompt = (
+        f"Review the following customer action step and estimate:\n"
+        f"- How impactful this step is for improving customer satisfaction or business results\n"
+        f"- How much effort it would likely take to implement\n\n"
+        f"Step: {step}\n\n"
+        "Respond in Python dictionary format like this:\n"
+        "{ 'impact': 'High', 'effort': 'Moderate' }"
+    )
+
+    try:
+        response = requests.post("http://localhost:11434/v1/chat/completions", json={
+            "model": "mistral",
+            "messages": [{"role": "user", "content": prompt}]
+        })
+        response.raise_for_status()
+        raw = response.json()['choices'][0]['message']['content']
+        print("🧠 Raw Response:", raw)
+
+        parsed = ast.literal_eval(raw)
+        return parsed
+
+    except Exception as e:
+        print("❌ Error in assessment:", e)
+        return { "impact": "", "effort": "" }
+
+@app.post("/assess-impact")
+def assess_impact(payload: dict = Body(...)):
+    step = payload.get("action_plan", "")
+
+    prompt = (
+        f"How impactful is the following customer action step for improving customer satisfaction or business results?\n"
+        f"Step: {step}\n\n"
+        "Respond with just one word: High, Medium, or Low."
+    )
+
+    try:
+        response = requests.post("http://localhost:11434/v1/chat/completions", json={
+            "model": "mistral",
+            "messages": [{"role": "user", "content": prompt}]
+        })
+        response.raise_for_status()
+        impact = response.json()['choices'][0]['message']['content'].strip()
+        return {"impact": impact}
+
+    except Exception as e:
+        print("❌ Error in impact assessment:", e)
+        return {"impact": ""}
+
+@app.post("/assess-effort")
+def assess_effort(payload: dict = Body(...)):
+    step = payload.get("action_plan", "")
+
+    prompt = (
+        f"How much effort would it likely take to implement the following customer action step?\n"
+        f"Step: {step}\n\n"
+        "Respond with just one word: Easy, Moderate, or Complex."
+    )
+
+    try:
+        response = requests.post("http://localhost:11434/v1/chat/completions", json={
+            "model": "mistral",
+            "messages": [{"role": "user", "content": prompt}]
+        })
+        response.raise_for_status()
+        effort = response.json()['choices'][0]['message']['content'].strip()
+        return {"effort": effort}
+
+    except Exception as e:
+        print("❌ Error in effort assessment:", e)
+        return {"effort": ""}

@@ -143,15 +143,7 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
         </div>
       )}
 
-      <div className={style.chatBox}>
-        {messages.map((msg, idx) => (
-          <ChatMessage key={idx} sender={msg.sender} text={msg.text} />
-        ))}
-        {isTyping && <ChatMessage sender="assistant" text={<TypingDots />} />}
-        <div ref={chatEndRef} />
-      </div>
-
-      {selectedCategory && categoryPrompts[selectedCategory] && (
+        {selectedCategory && categoryPrompts[selectedCategory] && (
             <div className={style.prompts}>
                 {categoryPrompts[selectedCategory].map((prompt, index) => (
                 <button
@@ -164,6 +156,14 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
                 ))}
             </div>
             )}
+
+      <div className={style.chatBox}>
+        {messages.map((msg, idx) => (
+          <ChatMessage key={idx} sender={msg.sender} text={msg.text} />
+        ))}
+        {isTyping && <ChatMessage sender="assistant" text={<TypingDots />} />}
+        <div ref={chatEndRef} />
+      </div>
 
       <form onSubmit={handleSubmit} className={style.inputForm}>
         <input
@@ -186,13 +186,26 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
 }
 
 function TypingDots() {
-  return (
-    <span className={style.typingDots}>
-      <span>.</span>
-      <span>.</span>
-      <span>.</span>
-    </span>
-  );
-}
+    const message = "Assistant is typing";
+  
+    return (
+      <div className={style.typingWrapper}>
+        {message.split("").map((char, i) => (
+          <span
+            key={i}
+            className={style.typingChar}
+            style={{ animationDelay: `${i * 0.05}s` }}
+          >
+            {char === " " ? "\u00A0" : char}
+          </span>
+        ))}
+        <span className={style.typingDots}>
+          <span>.</span>
+          <span>.</span>
+          <span>.</span>
+        </span>
+      </div>
+    );
+  }   
 
 export default FeedbackChat;

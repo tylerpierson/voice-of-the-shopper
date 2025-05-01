@@ -1,177 +1,174 @@
 .container {
   padding: 2rem;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #f9f9f9;
+  background-color: #f9f9fb;
   min-height: 100vh;
-
-  @media (max-width: 768px) {
-    padding: 1rem;
-  }
+  font-family: "Segoe UI", sans-serif;
 }
 
 .title {
   font-size: 2rem;
+  font-weight: 600;
   margin-bottom: 1.5rem;
-  text-align: center;
   color: #333;
 }
 
 .tabs {
   display: flex;
-  justify-content: center;
+  gap: 1rem;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 2rem;
-  padding: 10px 0;
-
-  @media (max-width: 768px) {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    justify-content: flex-start;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
+  margin-bottom: 1.5rem;
 }
 
 .tabButton {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 5px;
-  background-color: #e1e1e1;
-  color: #333;
-  font-weight: 500;
-  cursor: pointer;
   position: relative;
-  transition: background-color 0.2s ease;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s, border-color 0.2s;
 
   &:hover {
-    background-color: #ccc;
-  }
-
-  @media (max-width: 768px) {
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    white-space: nowrap;
+    background-color: #eef2f7;
   }
 }
 
 .activeTab {
-  background-color: #007bff;
-  color: white;
-
-  &:hover {
-    background-color: #0056b3;
-  }
+  border-color: #3f51b5;
+  background-color: #e8eaf6;
+  color: #3f51b5;
+  font-weight: 500;
 }
 
 .notificationDot {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  background-color: red;
+  top: -5px;
+  right: -10px;
+  background-color: #e53935;
   color: white;
   border-radius: 50%;
-  padding: 2px 6px;
+  padding: 0 6px;
   font-size: 0.75rem;
 }
 
-.sentimentSection {
-  margin-bottom: 3rem;
+/* Filter Section */
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
-.sentimentHeader {
-  font-size: 1.25rem;
-  padding: 8px 12px;
-  margin-bottom: 1rem;
-  border-radius: 4px;
-
-  @media (max-width: 768px) {
-    font-size: 1rem;
-    padding: 6px 10px;
-  }
+.searchInput {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-width: 250px;
 }
 
+.dropdown {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-width: 180px;
+}
+
+.timestamp {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Table */
 .table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
-  border-radius: 6px;
+  background-color: #fff;
+  border-radius: 8px;
   overflow: hidden;
-  font-size: 0.95rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
 
-  @media (max-width: 768px) {
-    font-size: 0.85rem;
-    table-layout: fixed;
-  }
+.table tbody tr:nth-child(even) {
+  background-color: #fbfbfb; // light gray
+}
+
+.table tbody tr:nth-child(odd) {
+  background-color: #ffffff; // white or default
 }
 
 .table th,
 .table td {
-  padding: 12px 16px;
+  padding: 0.75rem;
   text-align: left;
-
-  @media (max-width: 768px) {
-    padding: 8px 10px;
-  }
+  border-bottom: 1px solid #e0e0e0;
+  word-wrap: break-word;
 }
 
 .table th {
-  background-color: #f0f0f0;
-  color: #555;
-
-  @media (max-width: 768px) {
-    font-size: 0.75rem;
-  }
+  background-color: #f1f3f4;
+  font-weight: 600;
+  color: #444;
 }
 
-.table tbody tr {
-  border-top: 1px solid #eee;
+.clickableRow {
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.2s;
 
   &:hover {
-    background-color: #f5faff;
-  }
-}
-
-// Hide Summary Column in Mobile
-@media (max-width: 768px) {
-  .table td:first-child,
-  .table th:first-child {
-    display: none;
+    background-color: #f5f5f5;
   }
 }
 
 .badge {
   display: inline-block;
-  padding: 4px 8px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
   font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: 12px;
-  text-align: center;
+  font-weight: 500;
 }
 
 .deleteBtn {
-  padding: 6px 12px;
-  background-color: #dc3545;
-  color: white;
+  background-color: #f44336;
   border: none;
-  border-radius: 4px;
-  font-weight: bold;
+  color: white;
+  padding: 0.4rem 0.75rem;
+  border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  font-size: 0.85rem;
 
   &:hover {
-    background-color: #b52a37;
-  }
-
-  @media (max-width: 768px) {
-    padding: 5px 10px;
-    font-size: 0.8rem;
+    background-color: #d32f2f;
   }
 }
+
+.td {
+  vertical-align: middle;
+}
+
+.sortHeader {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+
+.sortArrow {
+  color: #bbb;
+  font-size: 0.7rem;
+  margin-left: 2px;
+}
+
+.sortArrow:first-of-type {
+  margin-left: 0.5rem;
+}
+
+
+.activeArrow {
+  color: #222; // dark when active
+  font-weight: bold;
+}
+
