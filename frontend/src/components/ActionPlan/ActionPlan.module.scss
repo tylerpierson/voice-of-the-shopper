@@ -14,10 +14,11 @@
   }
   
   .expanded {
-    height: 90vh;
     max-height: 90vh;
-    top: 5vh;
-    bottom: auto;
+    height: 90vh;
+    bottom: 0;
+    left: 0;
+    right: 0;
     border-radius: 12px 12px 0 0;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   }
@@ -116,5 +117,32 @@
     font-weight: 500;
     color: #1e3a8a;
     border: 1px solid #d1e0f5;
+  }
+  
+  /* New styles for report display */
+  .reportReadyLinkContainer {
+    text-align: center;
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f4f8ff;
+    border: 1px solid #cddbf3;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  
+  .openReportLink {
+    background-color: #2a4d8f;
+    color: #ffffff;
+    font-weight: 600;
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  
+    &:hover {
+      background-color: #183266;
+    }
   }
   

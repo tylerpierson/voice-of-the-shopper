@@ -158,3 +158,37 @@
     text-align: center;
   }
 }
+
+.headerButtons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 20px 0;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.buildReportButton {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #218838;
+  }
+
+  @media (max-width: 600px) {
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 8px 14px;
+  }
+}

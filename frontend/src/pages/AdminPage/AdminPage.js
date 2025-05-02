@@ -8,9 +8,8 @@ const categories = [
   "Store Experience", "Promotions", "Sustainability", "Family-Friendliness"
 ];
 
-function AdminPage({ onBackToChatbot }) {
+function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, triggerCategoryReport }) {
   const [feedbackList, setFeedbackList] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("View All");
   const [unseenCounts, setUnseenCounts] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSentiment, setFilterSentiment] = useState("");
@@ -22,14 +21,25 @@ function AdminPage({ onBackToChatbot }) {
   const sentiments = ["positive", "neutral", "negative"];
 
   useEffect(() => {
+    if (!triggerCategoryReport) return;
+
+    const summariesInCategory = feedbackList.filter(fb =>
+      currentCategory === "View All" || fb.department === currentCategory
+    );
+
+    console.log("🔍 Generating category report for:", currentCategory);
+    console.table(summariesInCategory);
+    // TODO: Pass these summaries into ActionPlan or send to backend
+  }, [triggerCategoryReport, currentCategory, feedbackList]);
+
+  useEffect(() => {
     fetch("http://localhost:8000/get-summaries")
       .then((res) => res.json())
       .then((data) => {
         const seenSessions = JSON.parse(localStorage.getItem("seenSessions") || "{}");
         const unseenCount = {};
 
-        data.forEach((summary) => {
-          const { department, session_id, seen } = summary;
+        data.forEach(({ department, session_id, seen }) => {
           if (!seenSessions[session_id] && !seen) {
             unseenCount[department] = (unseenCount[department] || 0) + 1;
           }
@@ -46,9 +56,7 @@ function AdminPage({ onBackToChatbot }) {
     if (!confirmDelete) return;
 
     try {
-      await fetch(`http://localhost:8000/delete-summary/${session_id}`, {
-        method: "DELETE",
-      });
+      await fetch(`http://localhost:8000/delete-summary/${session_id}`, { method: "DELETE" });
       setFeedbackList((prev) => prev.filter((fb) => fb.session_id !== session_id));
     } catch (err) {
       console.error("Error deleting summary:", err);
@@ -64,21 +72,14 @@ function AdminPage({ onBackToChatbot }) {
     }
   };
 
-  const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString();
-  };
+  const formatDate = (timestamp) => new Date(timestamp).toLocaleString();
 
   const handleTabClick = async (cat) => {
     const category = cat || "View All";
     setActiveCategory(category);
-
     if (category !== "View All") {
       try {
-        await fetch(`http://localhost:8000/mark-seen/${category}`, {
-          method: "POST",
-        });
-
+        await fetch(`http://localhost:8000/mark-seen/${category}`, { method: "POST" });
         const updatedSeenSessions = JSON.parse(localStorage.getItem("seenSessions") || "{}");
         feedbackList.forEach((fb) => {
           if (fb.department === category) {
@@ -107,9 +108,7 @@ function AdminPage({ onBackToChatbot }) {
     }
   };
 
-  const goToConversationPage = (session_id) => {
-    navigate(`/conversation/${session_id}`);
-  };
+  const goToConversationPage = (session_id) => navigate(`/conversation/${session_id}`);
 
   const filteredFeedbacks = feedbackList.filter((fb) => {
     const matchesQuery =
@@ -121,7 +120,7 @@ function AdminPage({ onBackToChatbot }) {
       : true;
 
     const matchesCategory =
-      activeCategory === "View All" || fb.department === activeCategory;
+      currentCategory === "View All" || fb.department === currentCategory;
 
     return matchesQuery && matchesSentiment && matchesCategory;
   });
@@ -160,7 +159,7 @@ function AdminPage({ onBackToChatbot }) {
         {categories.map((cat) => (
           <button
             key={cat}
-            className={`${styles.tabButton} ${cat === activeCategory ? styles.activeTab : ""}`}
+            className={`${styles.tabButton} ${cat === currentCategory ? styles.activeTab : ""}`}
             onClick={() => handleTabClick(cat)}
           >
             {cat}
@@ -181,7 +180,7 @@ function AdminPage({ onBackToChatbot }) {
         />
 
         <select
-          value={activeCategory === "View All" ? "" : activeCategory}
+          value={currentCategory === "View All" ? "" : currentCategory}
           onChange={(e) => handleTabClick(e.target.value || "View All")}
           className={styles.dropdown}
         >
@@ -207,92 +206,32 @@ function AdminPage({ onBackToChatbot }) {
         <thead>
           <tr>
             <th>
-              <div
-                className={styles.sortHeader}
-                onClick={() => handleSort("timestamp")}
-              >
+              <div className={styles.sortHeader} onClick={() => handleSort("timestamp")}>
                 Date
-                <span
-                  className={`${styles.sortArrow} ${
-                    sortKey === "timestamp" && sortDirection === "asc" ? styles.activeArrow : ""
-                  }`}
-                >
-                  ▲
-                </span>
-                <span
-                  className={`${styles.sortArrow} ${
-                    sortKey === "timestamp" && sortDirection === "desc" ? styles.activeArrow : ""
-                  }`}
-                >
-                  ▼
-                </span>
+                <span className={`${styles.sortArrow} ${sortKey === "timestamp" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
+                <span className={`${styles.sortArrow} ${sortKey === "timestamp" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
               </div>
             </th>
             <th>Summary</th>
             <th>
-              <div
-                className={styles.sortHeader}
-                onClick={() => handleSort("sentiment")}
-              >
+              <div className={styles.sortHeader} onClick={() => handleSort("sentiment")}>
                 Sentiment
-                <span
-                  className={`${styles.sortArrow} ${
-                    sortKey === "sentiment" && sortDirection === "asc" ? styles.activeArrow : ""
-                  }`}
-                >
-                  ▲
-                </span>
-                <span
-                  className={`${styles.sortArrow} ${
-                    sortKey === "sentiment" && sortDirection === "desc" ? styles.activeArrow : ""
-                  }`}
-                >
-                  ▼
-                </span>
+                <span className={`${styles.sortArrow} ${sortKey === "sentiment" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
+                <span className={`${styles.sortArrow} ${sortKey === "sentiment" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
               </div>
             </th>
             <th>
-              <div
-                className={styles.sortHeader}
-                onClick={() => handleSort("department")}
-              >
+              <div className={styles.sortHeader} onClick={() => handleSort("department")}>
                 Category
-                <span
-                  className={`${styles.sortArrow} ${
-                    sortKey === "department" && sortDirection === "asc" ? styles.activeArrow : ""
-                  }`}
-                >
-                  ▲
-                </span>
-                <span
-                  className={`${styles.sortArrow} ${
-                    sortKey === "department" && sortDirection === "desc" ? styles.activeArrow : ""
-                  }`}
-                >
-                  ▼
-                </span>
+                <span className={`${styles.sortArrow} ${sortKey === "department" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
+                <span className={`${styles.sortArrow} ${sortKey === "department" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
               </div>
             </th>
             <th>
-              <div
-                className={styles.sortHeader}
-                onClick={() => handleSort("user_name")}
-              >
+              <div className={styles.sortHeader} onClick={() => handleSort("user_name")}>
                 User
-                <span
-                  className={`${styles.sortArrow} ${
-                    sortKey === "user_name" && sortDirection === "asc" ? styles.activeArrow : ""
-                  }`}
-                >
-                  ▲
-                </span>
-                <span
-                  className={`${styles.sortArrow} ${
-                    sortKey === "user_name" && sortDirection === "desc" ? styles.activeArrow : ""
-                  }`}
-                >
-                  ▼
-                </span>
+                <span className={`${styles.sortArrow} ${sortKey === "user_name" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
+                <span className={`${styles.sortArrow} ${sortKey === "user_name" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
               </div>
             </th>
             <th>Action</th>
@@ -323,15 +262,6 @@ function AdminPage({ onBackToChatbot }) {
                   className={styles.deleteBtn}
                 >
                   Delete
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedSessionId(fb.session_id);
-                  }}
-                  className={styles.reportBtn}
-                >
-                  Build Report
                 </button>
               </td>
             </tr>

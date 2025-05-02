@@ -9,6 +9,9 @@ import requests
 from typing import Optional
 from uuid import uuid4
 import ast
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 app = FastAPI()
 
@@ -238,6 +241,30 @@ def generate_action_plan(session_id: str):
 
     return {"action_plan": response.json()['choices'][0]['message']['content']}
 
+@app.post("/generate-category-action-plan")
+def generate_category_action_plan(payload: dict = Body(...)):
+    category = payload.get("category", "")
+    cursor = conn.execute(
+        "SELECT summary FROM feedback_summary WHERE department = ?" if category != "View All" else "SELECT summary FROM feedback_summary",
+        (category,) if category != "View All" else ()
+    )
+    summaries = cursor.fetchall()
+    combined = "\n".join(summary[0] for summary in summaries)
+
+    prompt = (
+        f"You are an operations analyst. Given the following user feedback summaries from the '{category}' category, generate a high-impact action plan "
+        "to improve satisfaction or business performance. Be specific, practical, and concise.\n\n"
+        f"Summaries:\n{combined}\n\nAction Plan:"
+    )
+
+    response = requests.post("http://localhost:11434/v1/chat/completions", json={
+        "model": "mistral",
+        "messages": [{"role": "user", "content": prompt}]
+    })
+
+    return { "action_plan": response.json()['choices'][0]['message']['content'] }
+
+
 @app.post("/assess-impact-effort")
 def assess_impact_effort(payload: dict = Body(...)):
     step = payload.get("action_plan", "")
@@ -312,3 +339,49 @@ def assess_effort(payload: dict = Body(...)):
     except Exception as e:
         print("❌ Error in effort assessment:", e)
         return {"effort": ""}
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+@app.post("/find-duplicates")
+def find_duplicates(payload: dict = Body(...)):
+    category = payload.get("category", "View All")
+
+    # Fetch summaries
+    cursor = conn.execute(
+        "SELECT session_id, summary, department FROM feedback_summary WHERE department = ?" if category != "View All" else
+        "SELECT session_id, summary, department FROM feedback_summary",
+        (category,) if category != "View All" else ()
+    )
+    records = cursor.fetchall()
+
+    summaries = [{"session_id": sid, "summary": text, "department": dept} for sid, text, dept in records]
+    texts = [s["summary"] for s in summaries]
+
+    if len(texts) < 2:
+        return {"groups": []}  # Not enough to compare
+
+    # Embed summaries
+    embeddings = model.encode(texts, convert_to_tensor=True).cpu().numpy()
+    similarity_matrix = cosine_similarity(embeddings)
+
+    visited = set()
+    groups = []
+
+    threshold = 0.80  # You can tune this
+
+    for i in range(len(texts)):
+        if i in visited:
+            continue
+
+        group = [summaries[i]]
+        visited.add(i)
+
+        for j in range(i + 1, len(texts)):
+            if j not in visited and similarity_matrix[i][j] >= threshold:
+                group.append(summaries[j])
+                visited.add(j)
+
+        if len(group) > 1:
+            groups.append(group)
+
+    return {"groups": groups}
