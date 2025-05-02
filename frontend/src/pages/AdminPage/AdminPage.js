@@ -16,6 +16,8 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
   const [sortKey, setSortKey] = useState("timestamp");
   const [sortDirection, setSortDirection] = useState("desc");
   const [selectedSessionId, setSelectedSessionId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const navigate = useNavigate();
   const sentiments = ["positive", "neutral", "negative"];
@@ -29,7 +31,6 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
 
     console.log("🔍 Generating category report for:", currentCategory);
     console.table(summariesInCategory);
-    // TODO: Pass these summaries into ActionPlan or send to backend
   }, [triggerCategoryReport, currentCategory, feedbackList]);
 
   useEffect(() => {
@@ -72,11 +73,20 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
     }
   };
 
-  const formatDate = (timestamp) => new Date(timestamp).toLocaleString();
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return (
+      <div className={styles.timestamp}>
+        <span>{date.toLocaleDateString()}</span>
+        <span>{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+      </div>
+    );
+  };  
 
   const handleTabClick = async (cat) => {
     const category = cat || "View All";
     setActiveCategory(category);
+    setCurrentPage(1);
     if (category !== "View All") {
       try {
         await fetch(`http://localhost:8000/mark-seen/${category}`, { method: "POST" });
@@ -151,6 +161,9 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
     return sortDirection === "asc" ? result : -result;
   });
 
+  const pageCount = Math.ceil(sortedFeedbacks.length / itemsPerPage);
+  const paginatedFeedbacks = sortedFeedbacks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Admin Feedback Dashboard</h1>
@@ -206,30 +219,26 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
         <thead>
           <tr>
             <th>
-              <div className={styles.sortHeader} onClick={() => handleSort("timestamp")}>
-                Date
+              <div className={styles.sortHeader} onClick={() => handleSort("timestamp")}>Date
                 <span className={`${styles.sortArrow} ${sortKey === "timestamp" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
                 <span className={`${styles.sortArrow} ${sortKey === "timestamp" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
               </div>
             </th>
             <th>Summary</th>
             <th>
-              <div className={styles.sortHeader} onClick={() => handleSort("sentiment")}>
-                Sentiment
+              <div className={styles.sortHeader} onClick={() => handleSort("sentiment")}>Sentiment
                 <span className={`${styles.sortArrow} ${sortKey === "sentiment" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
                 <span className={`${styles.sortArrow} ${sortKey === "sentiment" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
               </div>
             </th>
             <th>
-              <div className={styles.sortHeader} onClick={() => handleSort("department")}>
-                Category
+              <div className={styles.sortHeader} onClick={() => handleSort("department")}>Category
                 <span className={`${styles.sortArrow} ${sortKey === "department" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
                 <span className={`${styles.sortArrow} ${sortKey === "department" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
               </div>
             </th>
             <th>
-              <div className={styles.sortHeader} onClick={() => handleSort("user_name")}>
-                User
+              <div className={styles.sortHeader} onClick={() => handleSort("user_name")}>User
                 <span className={`${styles.sortArrow} ${sortKey === "user_name" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
                 <span className={`${styles.sortArrow} ${sortKey === "user_name" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
               </div>
@@ -238,7 +247,7 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
           </tr>
         </thead>
         <tbody>
-          {sortedFeedbacks.map((fb) => (
+          {paginatedFeedbacks.map((fb) => (
             <tr
               key={fb.session_id}
               className={styles.clickableRow}
@@ -247,9 +256,7 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
               <td className={styles.td}>{formatDate(fb.timestamp)}</td>
               <td className={styles.td}>{fb.summary}</td>
               <td className={styles.td}>
-                <span style={getSentimentStyle(fb.sentiment)} className={styles.badge}>
-                  {fb.sentiment}
-                </span>
+                <span style={getSentimentStyle(fb.sentiment)} className={styles.badge}>{fb.sentiment}</span>
               </td>
               <td className={styles.td}>{fb.department}</td>
               <td className={styles.td}>{fb.user_name || "Anonymous"}</td>
@@ -268,6 +275,18 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
           ))}
         </tbody>
       </table>
+
+      {pageCount > 1 && (
+        <div className={styles.pagination}>
+          <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+            &lt; Prev
+          </button>
+          <span>Page {currentPage} of {pageCount}</span>
+          <button onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))} disabled={currentPage === pageCount}>
+            Next &gt;
+          </button>
+        </div>
+      )}
 
       {selectedSessionId && (
         <ActionPlan
