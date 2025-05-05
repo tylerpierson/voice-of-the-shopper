@@ -115,30 +115,30 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
 
   if (showThankYou) {
     const handleNameSubmit = async () => {
-        const trimmed = tempNameInput.trim();
-        if (!trimmed) {
-          alert("⚠️ Please enter a name before submitting.");
-          return;
+      const trimmed = tempNameInput.trim();
+      if (!trimmed) {
+        alert("⚠️ Please enter a name before submitting.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:8000/update-user-name/${sessionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_name: trimmed })
+        });
+
+        if (res.ok) {
+          setUserName(trimmed);
+          alert("✅ Name updated successfully.");
+        } else {
+          alert("❌ Failed to update name.");
         }
-      
-        try {
-          const res = await fetch(`http://localhost:8000/update-user-name/${sessionId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_name: trimmed })
-          });
-      
-          if (res.ok) {
-            setUserName(trimmed);
-            alert("✅ Name updated successfully.");
-          } else {
-            alert("❌ Failed to update name.");
-          }
-        } catch (err) {
-          console.error("Error updating name:", err);
-          alert("❌ Network error updating name.");
-        }
-      };      
+      } catch (err) {
+        console.error("Error updating name:", err);
+        alert("❌ Network error updating name.");
+      }
+    };
 
     return (
       <div className={style.container}>
@@ -182,6 +182,14 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
         </div>
       )}
 
+      <div className={style.chatBox}>
+        {messages.map((msg, idx) => (
+          <ChatMessage key={idx} sender={msg.sender} text={msg.text} />
+        ))}
+        {isTyping && <ChatMessage sender="assistant" text={<TypingDots />} />}
+        <div ref={chatEndRef} />
+      </div>
+
       {selectedCategory && categoryPrompts[selectedCategory] && (
         <div className={style.prompts}>
           {categoryPrompts[selectedCategory].map((prompt, index) => (
@@ -195,14 +203,6 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
           ))}
         </div>
       )}
-
-      <div className={style.chatBox}>
-        {messages.map((msg, idx) => (
-          <ChatMessage key={idx} sender={msg.sender} text={msg.text} />
-        ))}
-        {isTyping && <ChatMessage sender="assistant" text={<TypingDots />} />}
-        <div ref={chatEndRef} />
-      </div>
 
       <form onSubmit={handleSubmit} className={style.inputForm}>
         <input
