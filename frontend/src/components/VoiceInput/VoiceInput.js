@@ -66,7 +66,7 @@ style={{
   display: 'inline-flex',
   alignItems: 'center',
   color: '#808080',
-  fontSize: '28px',
+  fontSize: '20px',
 }}
 title={isListening ? 'Mute Microphone' : 'Unmute Microphone'}
 >
