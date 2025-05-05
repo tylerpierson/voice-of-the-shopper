@@ -1,5 +1,4 @@
-from fastapi import FastAPI
-from fastapi import Path, Body
+from fastapi import FastAPI, Path, Body, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -169,6 +168,22 @@ def finalize_summary(session_id: str, payload: FinalizePayload):
 
     return {"summary": summary, "department": department, "sentiment": sentiment}
 
+@app.patch("/update-user-name/{session_id}")
+def update_user_name(session_id: str, payload: dict = Body(...)):
+    new_name = payload.get("user_name", "").strip()
+    if not new_name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty.")
+
+    try:
+        conn.execute(
+            "UPDATE feedback_summary SET user_name = ? WHERE session_id = ?",
+            (new_name, session_id)
+        )
+        conn.commit()
+        return {"status": "updated", "user_name": new_name}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.get("/get-summaries")
 def get_summaries():
     cursor = conn.execute(
@@ -263,7 +278,6 @@ def generate_category_action_plan(payload: dict = Body(...)):
     })
 
     return { "action_plan": response.json()['choices'][0]['message']['content'] }
-
 
 @app.post("/assess-impact-effort")
 def assess_impact_effort(payload: dict = Body(...)):
@@ -360,7 +374,6 @@ def find_duplicates(payload: dict = Body(...)):
     if len(texts) < 2:
         return {"groups": []}  # Not enough to compare
 
-    # Embed summaries
     embeddings = model.encode(texts, convert_to_tensor=True).cpu().numpy()
     similarity_matrix = cosine_similarity(embeddings)
 

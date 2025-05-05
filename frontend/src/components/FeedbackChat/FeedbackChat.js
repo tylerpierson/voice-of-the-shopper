@@ -9,17 +9,17 @@ const categories = [
 ];
 
 const categoryPrompts = {
-    Taste: ["The flavor was great!", "It was too salty.", "Loved the freshness.", "Could be more seasoned."],
-    Packaging: ["The box was damaged.", "Loved the eco-friendly packaging.", "Too much plastic.", "Easy to open."],
-    Price: ["Great value for money.", "Too expensive.", "Affordable and worth it.", "Could be cheaper."],
-    Availability: ["Item was out of stock.", "Easy to find.", "Not available in my area.", "Restocked quickly."],
-    "Store Experience": ["Helpful staff.", "Checkout took too long.", "Store was clean.", "Great atmosphere."],
-    Promotions: ["Good deals available.", "Promo was unclear.", "Loved the discount.", "Offer expired too quickly."],
-    Sustainability: ["Love the eco-focus.", "Could use less plastic.", "Sustainable options are great.", "More green products please."],
-    "Family-Friendliness": ["Kids loved it!", "Great for families.", "Not suitable for children.", "Fun for all ages."]
-  };  
+  Taste: ["The flavor was great!", "It was too salty.", "Loved the freshness.", "Could be more seasoned."],
+  Packaging: ["The box was damaged.", "Loved the eco-friendly packaging.", "Too much plastic.", "Easy to open."],
+  Price: ["Great value for money.", "Too expensive.", "Affordable and worth it.", "Could be cheaper."],
+  Availability: ["Item was out of stock.", "Easy to find.", "Not available in my area.", "Restocked quickly."],
+  "Store Experience": ["Helpful staff.", "Checkout took too long.", "Store was clean.", "Great atmosphere."],
+  Promotions: ["Good deals available.", "Promo was unclear.", "Loved the discount.", "Offer expired too quickly."],
+  Sustainability: ["Love the eco-focus.", "Could use less plastic.", "Sustainable options are great.", "More green products please."],
+  "Family-Friendliness": ["Kids loved it!", "Great for families.", "Not suitable for children.", "Fun for all ages."]
+};
 
-function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
+function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   const [messages, setMessages] = useState([
     { sender: "assistant", text: "👋 Hi there! Please select a category and tell me about your experience." }
   ]);
@@ -28,8 +28,8 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
   const [sessionId, setSessionId] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
-  const [wantsContact, setWantsContact] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [tempNameInput, setTempNameInput] = useState("");
 
   const chatEndRef = useRef(null);
 
@@ -39,7 +39,7 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
 
   const handlePromptSelect = (prompt) => {
     sendMessage(prompt);
-  };  
+  };
 
   const sendMessage = async (text) => {
     const newMessages = [...messages, { sender: "user", text }];
@@ -83,16 +83,17 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
 
   const finalizeFeedback = async () => {
     try {
-        await fetch(`http://localhost:8000/finalize-summary/${sessionId}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              user_name: userName,
-              category: selectedCategory  // ✅ send this!
-            })
-          });    
-          setShowConfetti(true);
-            setTimeout(() => setShowThankYou(true), 1500);      
+      await fetch(`http://localhost:8000/finalize-summary/${sessionId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_name: userName?.trim() || "Anonymous",
+          category: selectedCategory
+        })
+      });
+
+      setShowConfetti(true);
+      setTimeout(() => setShowThankYou(true), 1500);
     } catch (error) {
       console.error("Finalization error:", error);
       alert("❌ Failed to finalize feedback.");
@@ -108,20 +109,58 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
     setSessionId(null);
     setIsTyping(false);
     setShowThankYou(false);
-    setWantsContact(false);
+    setShowConfetti(false);
+    setTempNameInput("");
   };
 
   if (showThankYou) {
+    const handleNameSubmit = async () => {
+        const trimmed = tempNameInput.trim();
+        if (!trimmed) {
+          alert("⚠️ Please enter a name before submitting.");
+          return;
+        }
+      
+        try {
+          const res = await fetch(`http://localhost:8000/update-user-name/${sessionId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_name: trimmed })
+          });
+      
+          if (res.ok) {
+            setUserName(trimmed);
+            alert("✅ Name updated successfully.");
+          } else {
+            alert("❌ Failed to update name.");
+          }
+        } catch (err) {
+          console.error("Error updating name:", err);
+          alert("❌ Network error updating name.");
+        }
+      };      
+
     return (
       <div className={style.container}>
         {showConfetti && <Confetti numberOfPieces={250} recycle={false} />}
         <div className={style.thankYouCard}>
           <h2>🎉 Thank you for your input!</h2>
           <p>We truly appreciate your feedback.</p>
-          <button
-            className={style.finishButton}
-            onClick={resetToStart}
-          >
+
+          <div className={style.nameInputRow}>
+            <input
+              type="text"
+              placeholder="Enter your name (optional)"
+              value={tempNameInput}
+              onChange={(e) => setTempNameInput(e.target.value)}
+              className={style.nameInput}
+            />
+            <button onClick={handleNameSubmit} className={style.submitButton}>
+              Submit Name
+            </button>
+          </div>
+
+          <button onClick={resetToStart} className={style.finishButton}>
             Leave More Feedback
           </button>
         </div>
@@ -143,19 +182,19 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
         </div>
       )}
 
-        {selectedCategory && categoryPrompts[selectedCategory] && (
-            <div className={style.prompts}>
-                {categoryPrompts[selectedCategory].map((prompt, index) => (
-                <button
-                    key={index}
-                    className={style.promptButton}
-                    onClick={() => handlePromptSelect(prompt)}
-                >
-                    {prompt}
-                </button>
-                ))}
-            </div>
-            )}
+      {selectedCategory && categoryPrompts[selectedCategory] && (
+        <div className={style.prompts}>
+          {categoryPrompts[selectedCategory].map((prompt, index) => (
+            <button
+              key={index}
+              className={style.promptButton}
+              onClick={() => handlePromptSelect(prompt)}
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className={style.chatBox}>
         {messages.map((msg, idx) => (
@@ -186,26 +225,26 @@ function FeedbackChat({ toggleAdmin, userName, resetUserName }) {
 }
 
 function TypingDots() {
-    const message = "Assistant is typing";
-  
-    return (
-      <div className={style.typingWrapper}>
-        {message.split("").map((char, i) => (
-          <span
-            key={i}
-            className={style.typingChar}
-            style={{ animationDelay: `${i * 0.05}s` }}
-          >
-            {char === " " ? "\u00A0" : char}
-          </span>
-        ))}
-        <span className={style.typingDots}>
-          <span>.</span>
-          <span>.</span>
-          <span>.</span>
+  const message = "Assistant is typing";
+
+  return (
+    <div className={style.typingWrapper}>
+      {message.split("").map((char, i) => (
+        <span
+          key={i}
+          className={style.typingChar}
+          style={{ animationDelay: `${i * 0.05}s` }}
+        >
+          {char === " " ? "\u00A0" : char}
         </span>
-      </div>
-    );
-  }   
+      ))}
+      <span className={style.typingDots}>
+        <span>.</span>
+        <span>.</span>
+        <span>.</span>
+      </span>
+    </div>
+  );
+}
 
 export default FeedbackChat;
