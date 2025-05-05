@@ -33,7 +33,7 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   const [showThankYou, setShowThankYou] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [tempNameInput, setTempNameInput] = useState("");
-  const[placeholder,setPlaceholder] = useState('Type or Click mic to speak...');
+  const[placeholder,setPlaceholder] = useState('Type or click mic to speak...');
 
   const chatEndRef = useRef(null);
 

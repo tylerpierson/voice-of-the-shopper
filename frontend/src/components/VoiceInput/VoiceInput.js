@@ -1,9 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { faMicrophone, faMicrophoneSlash } from '@fortawesome/free-solid-svg-icons';
-// import { faCircleMicrophone } from '@fortawesome/free-solid-svg-icons';
-// import { Mic , MicOff } from '@fluentui/react-icons';
+import { faMicrophone, faMicrophoneSlash } from '@fortawesome/free-solid-svg-icons';
 
 
 const VoiceInput = ({ onSpeechResult,handlePlaceHolder}) => {
@@ -45,6 +43,7 @@ const VoiceInput = ({ onSpeechResult,handlePlaceHolder}) => {
     if (!recognitionRef.current) return;
 
     if (isListening) {
+      handlePlaceHolder('Type or click mic to speak...');
       recognitionRef.current.stop();
     } else {
       handlePlaceHolder('Listening...');
@@ -56,32 +55,23 @@ const VoiceInput = ({ onSpeechResult,handlePlaceHolder}) => {
 
   return (
     <div style={{ marginTop: '10px' }}>
-      <button
-      onClick={toggleListening}
-      style={{
-        padding: '10px',
-        borderRadius: '50%',
-        border: 'none',
-        backgroundColor: 'none',
-        cursor: 'pointer',
-      }}
-    >
-      <FontAwesomeIcon
-        icon={isListening ? 'red' : 'black'}
-        style={{ color: 'white', fontSize: '24px' }}
-      />
-      {/* <FontAwesomeIcon
-        icon={isListening ? faMicrophoneSlash : faCircleMicrophon}
-        color={isListening ? 'red' : 'black'}
-        size="lg"
-        title={isListening ? 'Mic Off' : 'Mic On'}
-      /> */}
-      {/* {isListening ? (
-        <Mic style={{ fontSize: 24, color: 'white' }} />
-      ) : (
-        <MicOff style={{ fontSize: 24, color: 'white' }} />
-      )} */}
-    </button>
+
+<button
+onClick={toggleListening}
+style={{
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  padding: 0,
+  display: 'inline-flex',
+  alignItems: 'center',
+  color: '#808080',
+  fontSize: '28px',
+}}
+title={isListening ? 'Mute Microphone' : 'Unmute Microphone'}
+>
+<FontAwesomeIcon icon={isListening ? faMicrophone : faMicrophoneSlash} />
+</button>
     </div>
   );
 };
