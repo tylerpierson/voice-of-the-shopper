@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import style from "./FeedbackChat.module.scss";
 import ChatMessage from "../ChatMessage/ChatMessage";
 import Confetti from "react-confetti";
+import VoiceInput from '../VoiceInput/VoiceInput';
 
 const categories = [
   "Taste", "Packaging", "Price", "Availability",
@@ -20,6 +21,8 @@ const categoryPrompts = {
 };
 
 function FeedbackChat({ toggleAdmin, userName, setUserName }) {
+  const [transcript, setTranscript] = useState('');
+  // const [inputText, setInputText] = useState('')
   const [messages, setMessages] = useState([
     { sender: "assistant", text: "👋 Hi there! Please select a category and tell me about your experience." }
   ]);
@@ -30,6 +33,7 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   const [showThankYou, setShowThankYou] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [tempNameInput, setTempNameInput] = useState("");
+  const[placeholder,setPlaceholder] = useState('Type or click mic to speak...');
 
   const chatEndRef = useRef(null);
 
@@ -79,7 +83,20 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (input.trim()) sendMessage(input);
+    setInput('')
   };
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+  };
+
+  // Handles updates from speech input
+  const handleSpeechInput = (speechText) => {
+    setInput((prevText) => prevText + ' ' + speechText);
+  };
+
+  const onPlaceHolderChange =(text) =>{
+    setPlaceholder(text)
+  }
 
   const finalizeFeedback = async () => {
     try {
@@ -208,10 +225,11 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
         <input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
+          onChange={handleInputChange}
+          placeholder= {placeholder}
           disabled={!selectedCategory}
         />
+        <VoiceInput onSpeechResult={handleSpeechInput} handlePlaceHolder={onPlaceHolderChange}/> {/* Pass the function as a prop */}
         <button type="submit" className={style.sendButton} disabled={!selectedCategory || !input.trim()}>
           Send
         </button>
