@@ -222,6 +222,12 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    .nameSubmitted {
+        color: green;
+        font-size: 0.95rem;
+        margin-top: 0.5rem;
+      }
   }
   
   .thankYouCard h2 {
