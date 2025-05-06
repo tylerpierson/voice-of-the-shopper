@@ -1,17 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   useNavigate,
-  useLocation
+  useLocation,
 } from "react-router-dom";
 
 import FeedbackChat from "./components/FeedbackChat/FeedbackChat";
-import AdminPage from "./pages/AdminPage/AdminPage";
-import ConversationPage from "./pages/ConversationPage/ConversationPage";
 import ProgressiveOnboarding from "./components/ProgressiveOnboarding/ProgressiveOnboarding";
-import ActionPlan from "./components/ActionPlan/ActionPlan";
+import ConversationPage from "./pages/ConversationPage/ConversationPage";
+import ActionPlanReport from "./components/ActionPlanReport/ActionPlanReport";
+import AdminPage from "./pages/AdminPage/AdminPage";
+import NavBar from "./components/NavBar/NavBar";
+import DuplicatesTab from "./components/DuplicatesTab/DuplicatesTab";
+import ActionPlanTab from "./components/ActionPlanTab/ActionPlanTab";
+import OverviewTab from "./components/OverviewTab/OverviewTab";
 
 import styles from "./App.module.scss";
 
@@ -19,8 +23,8 @@ function AppWrapper() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [submittedName, setSubmittedName] = useState(null);
   const [activeCategory, setActiveCategory] = useState("View All");
-  const [triggerCategoryReport, setTriggerCategoryReport] = useState(false);
-  const [allSummaries, setAllSummaries] = useState([]);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [summaries, setSummaries] = useState([]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,82 +35,73 @@ function AppWrapper() {
     navigate("/");
   };
 
-  const fetchAllSummaries = async () => {
-    try {
-      const res = await fetch("http://localhost:8000/get-summaries");
-      const data = await res.json();
-      setAllSummaries(data);
-    } catch (err) {
-      console.error("Failed to load summaries:", err);
+  useEffect(() => {
+    if (location.pathname === "/admin") {
+      fetch("http://localhost:8000/get-summaries")
+        .then((res) => res.json())
+        .then(setSummaries)
+        .catch(console.error);
     }
-  };
+  }, [location.pathname]);
 
   const renderHeader = () => (
     <div className={styles.header}>
-      <img src="/img/vos_logo.png" alt="Voice of the Shopper" className={styles.logo} />
-
-      {location.pathname === "/" && (
-        <button
-          className={styles.backButton}
-          onClick={() => navigate("/admin")}
-          style={{ margin: 20 }}
-        >
-          Go to Admin Dashboard
-        </button>
-      )}
-
-      {location.pathname === "/admin" && (
-        <div className={styles.headerButtons}>
-          <button
-            className={styles.backButton}
-            onClick={handleResetUserName}
-            style={{ margin: 20 }}
-          >
+      {location.pathname === "/admin" ? (
+        <>
+          <img
+            src="/img/vos_logo.png"
+            alt="Voice of the Shopper"
+            className={styles.logo}
+          />
+          <NavBar activeTab={activeTab} setActiveTab={setActiveTab} />
+          <button className={styles.backButton} onClick={handleResetUserName}>
             Back to Chatbot
           </button>
+        </>
+      ) : location.pathname === "/" ? (
+        <>
+          <img
+            src="/img/vos_logo.png"
+            alt="Voice of the Shopper"
+            className={styles.logo}
+          />
           <button
-            className={styles.buildReportButton}
-            onClick={() => {
-              fetchAllSummaries();
-              setTriggerCategoryReport(true);
-            }}
-            style={{ margin: 20 }}
+            className={styles.backButton}
+            onClick={() => navigate("/admin")}
           >
-            Build Category Report
+            Go to Admin Dashboard
           </button>
-        </div>
-      )}
-
-      {location.pathname.startsWith("/conversation") && (
-        <button
-          className={styles.backButton}
-          onClick={() => navigate("/admin")}
-          style={{ margin: 20 }}
-        >
-          Back to Admin Dashboard
-        </button>
-      )}
+        </>
+      ) : location.pathname.startsWith("/conversation") ? (
+        <>
+          <img
+            src="/img/vos_logo.png"
+            alt="Voice of the Shopper"
+            className={styles.logo}
+          />
+          <button
+            className={styles.backButton}
+            onClick={() => navigate("/admin")}
+          >
+            Back to Admin Dashboard
+          </button>
+        </>
+      ) : null}
     </div>
-  );
+  );  
 
   return (
     <>
       {renderHeader()}
-
-      {triggerCategoryReport && (
-        <ActionPlan
-          category={activeCategory}
-          summaries={allSummaries}
-          onClose={() => setTriggerCategoryReport(false)}
-        />
-      )}
 
       <Routes>
         <Route
           path="/"
           element={
             showOnboarding ? (
-              <ProgressiveOnboarding onFinish={() => setShowOnboarding(false)} />
+              <ProgressiveOnboarding
+                onFinish={() => setShowOnboarding(false)}
+              />
             ) : (
               <FeedbackChat
                 toggleAdmin={() => navigate("/admin")}
@@ -121,15 +116,35 @@ function AppWrapper() {
         <Route
           path="/admin"
           element={
-            <AdminPage
-              onBackToChatbot={handleResetUserName}
-              currentCategory={activeCategory}
-              setActiveCategory={setActiveCategory}
-            />
+            <div className={styles.tabContent}>
+              {activeTab === "overview" && (
+                <OverviewTab
+                  category="View All"
+                  summaries={summaries}
+                />
+              )}
+              {activeTab === "feedback" && (
+                <AdminPage
+                  currentCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                />
+              )}
+              {activeTab === "duplicates" && (
+                <DuplicatesTab />
+              )}
+              {activeTab === "action" && (
+                <ActionPlanTab
+                  summaries={summaries}
+                />
+              )}
+            </div>
           }
         />
 
-        <Route path="/conversation/:sessionId" element={<ConversationPage />} />
+        <Route
+          path="/conversation/:sessionId"
+          element={<ConversationPage />}
+        />
       </Routes>
     </>
   );

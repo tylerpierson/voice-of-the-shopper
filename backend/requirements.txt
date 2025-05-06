@@ -4,3 +4,4 @@ transformers
 torch
 pydantic
 openai
+sentence-transformers

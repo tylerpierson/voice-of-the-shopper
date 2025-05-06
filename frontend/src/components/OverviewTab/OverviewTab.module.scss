@@ -1,0 +1,125 @@
+.container {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #2c3e50;
+  }
+  
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: #1a237e;
+  }
+  
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    justify-content: center;
+  
+    label {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+  
+    select {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      background-color: #fff;
+      cursor: pointer;
+  
+      &:hover {
+        border-color: #007bff;
+      }
+    }
+  
+    button {
+      padding: 6px 14px;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 6px;
+      background-color: #1976d2;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+  
+      &:hover {
+        background-color: #125ea8;
+      }
+    }
+  }
+  
+  .chartTabs {
+    display: flex;
+    gap: 0.5rem;
+  
+    button {
+      background-color: #e3f2fd;
+      color: #0d47a1;
+      border: 1px solid #bbdefb;
+      padding: 6px 12px;
+      border-radius: 4px;
+  
+      &.activeTab {
+        background-color: #1976d2;
+        color: white;
+        font-weight: bold;
+      }
+    }
+  }
+  
+  .chartContainer {
+    margin: 1.5rem 0;
+    display: flex;
+    justify-content: center;
+    canvas {
+      max-width: 100%;
+    }
+  }
+  
+  .loading {
+    text-align: center;
+    font-style: italic;
+    font-size: 1rem;
+    margin-top: 2rem;
+    color: #777;
+  }
+  
+  .breakdownSection {
+    margin-top: 2rem;
+  
+    h3 {
+      font-size: 1.25rem;
+      color: #37474f;
+      margin-bottom: 0.5rem;
+    }
+  
+    ul {
+      list-style: disc;
+      padding-left: 1.5rem;
+      margin-bottom: 1.5rem;
+  
+      li {
+        margin-bottom: 0.5rem;
+      }
+    }
+  
+    p {
+      font-style: italic;
+      color: #999;
+    }
+  }
+  
+  .pieChart {
+    max-width: 300px;
+    max-height: 300px;
+    margin: 0 auto;
+    display: block;
+  }
+  
