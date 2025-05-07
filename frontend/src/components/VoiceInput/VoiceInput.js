@@ -88,12 +88,15 @@ const VoiceInput = ({ onSpeechResult, handlePlaceHolder }) => {
   return (
     <div className={styles.micContainer}>
       <button
-        onClick={toggleListening}
-        className={`${styles.micButton} ${isListening ? styles.micActive : ''}`}
-        title={isListening ? 'Mute Microphone' : 'Unmute Microphone'}
-      >
-        <FontAwesomeIcon icon={isListening ? faMicrophone : faMicrophoneSlash} />
-      </button>
+  onClick={toggleListening}
+  className={`${styles.micButton} ${isListening ? styles.micActive : ''}`}
+  title={isListening ? 'Mute Microphone' : 'Unmute Microphone'}
+>
+  <FontAwesomeIcon
+    icon={isListening ? faMicrophone : faMicrophoneSlash}
+    className={styles.micIcon}
+  />
+</button>
     </div>
   );
 };

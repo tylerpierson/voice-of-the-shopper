@@ -7,47 +7,38 @@
   
   .micButton {
     background: none;
-    border: 2px solid #007bff;  /* Blue border to give the button a clear outline */
+    border: 2px solid #ffffff; /* White border */
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 60px;  /* Set a fixed width for the square button */
-    height: 60px;  /* Set a fixed height for the square button */
-    border-radius: 10px;  /* Optional: rounded corners for the button */
+    width: 40px;
+    height: 60px;
     padding: 0;
-    transition: color 0.3s ease-in-out;
+    padding-bottom: 5px;
+    transition: border-color 0.3s ease-in-out;
   }
   
   .micIcon {
-    transition: transform 0.3s ease-in-out;
-    font-size: 28px;  /* Ensure the icon is appropriately sized */
-  }
-  
-  .micActive {
-    color: #ff3b30;  /* Red color for active speaking state */
-  }
-  
-  .micInactive {
-    color: #007bff;  /* Blue color for idle state */
+    font-size: 28px;
+    color: #007bff; /* Blue mic by default */
+    transition: color 0.3s ease-in-out;
   }
   
   .micActive .micIcon {
-    animation: flicker 0.5s infinite alternate;
+    color: #ff3b30; /* Red mic when speaking */
+    animation: flicker 0.6s infinite alternate;
   }
   
   @keyframes flicker {
     0% {
-      opacity: 0.9;
-    //   transform: scale(1);  /* No scaling at s   tart */
+      opacity: 1;
     }
     50% {
-      opacity: 0.4;  /* Flicker effect by reducing opacity */
-    //   transform: scale(1.05);  /* Slightly scale the icon */
+      opacity: 0.3;
     }
     100% {
-      opacity: 0.9;
-    //   transform: scale(1);  /* Return to normal scale */
+      opacity: 1;
     }
   }
   
