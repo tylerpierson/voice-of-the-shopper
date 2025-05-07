@@ -69,7 +69,7 @@ const fetchLocationCount = async () => {
 };
     
 return (
-        <MapContainer center={[20, 0]} zoom={2} style={{ height: '500px', width: '100%' }} whenCreated={setMapInstance}>
+        <MapContainer center={[20, 0]} zoom={2} style={{ height: '700px', width: '100%' }} whenCreated={setMapInstance}>
             <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution=""

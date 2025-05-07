@@ -33,16 +33,12 @@ function AppWrapper() {
   const [activeCategory, setActiveCategory] = useState("View All");
   const [triggerCategoryReport, setTriggerCategoryReport] = useState(false);
   const [allSummaries, setAllSummaries] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [summaries, setSummaries] = useState([]);
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleModalUp = () => {
-    if (!isModalOpen) { setIsModalOpen(true) } else { setIsModalOpen(false)}
-  }
   const handleResetUserName = () => {
     setShowOnboarding(false);
     setSubmittedName(null);
@@ -59,13 +55,13 @@ function AppWrapper() {
   }, [location.pathname]);
 
   const fetchLocationCount = async () => {
-    try {
-      const res = await fetch("http://localhost:8000/get-location-count");
-      const data = await res.json();
-      setAllSummaries(data);
-    } catch (err) {
-      console.error("Failed to load summaries:", err);
-    }
+    // try {
+    //   const res = await fetch("http://localhost:8000/get-location-count");
+    //   const data = await res.json();
+    //   setAllSummaries(data);
+    // } catch (err) {
+    //   console.error("Failed to load summaries:", err);
+    // }
   };
 
 
@@ -175,14 +171,7 @@ L.Icon.Default.mergeOptions({
                 />
               )}
               {activeTab === "feedBackWithGeo" && (
-                <div>
-                  { !isModalOpen && <button onClick={()=>{handleModalUp()}} className={styles.showFeedbackButton}>Show Feedback  count</button>
-                  }
-                
-                <ModalPopUp isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                 <MapWithFeedback/>
-             </ModalPopUp>
-             </div>
+                <div><MapWithFeedback/></div>
               )}
             </div>
           }

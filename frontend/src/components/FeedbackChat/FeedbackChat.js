@@ -4,6 +4,7 @@ import ChatMessage from "../ChatMessage/ChatMessage";
 import Confetti from "react-confetti";
 import VoiceInput from '../VoiceInput/VoiceInput';
 import MapPopup from '../MapPopup/MapPopup';
+import LocationWithCountry from '../LocationWithCountry/LocationWithCountry';
 
 const categories = [
   "Taste", "Packaging", "Price", "Availability",
@@ -241,6 +242,7 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
       )}
       <div>
     </div>
+    <div><LocationWithCountry/></div>
       <form onSubmit={handleSubmit} className={style.inputForm}>
       <input
           type="text"
