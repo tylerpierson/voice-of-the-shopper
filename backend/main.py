@@ -77,6 +77,11 @@ try:
 except sqlite3.OperationalError:
     pass
 
+try:
+    conn.execute("ALTER TABLE chat_messages ADD COLUMN location TEXT DEFAULT NULL")
+except sqlite3.OperationalError:
+    pass
+
 conn.execute("UPDATE feedback_summary SET sentiment = 'Unknown' WHERE sentiment IS NULL")
 conn.commit()
 
@@ -96,8 +101,8 @@ def submit_feedback(feedback: Feedback):
         location = feedback.location if feedback.location else "Unknown"
 
         conn.execute(
-            "INSERT INTO chat_messages (session_id, role, text,location) VALUES (?, ?, ?,?)",
-            (session_id, "user", feedback.message,location)
+            "INSERT INTO chat_messages (session_id, role, text, location) VALUES (?, ?, ?, ?)",
+            (session_id, "user", feedback.message, location)
         )
         conn.commit()
 
@@ -112,7 +117,11 @@ def submit_feedback(feedback: Feedback):
         return {"status": "ok", "bot_reply": bot_reply, "session_id": session_id}
 
     except Exception as e:
+        import traceback
+        print("❌ submit-feedback error:", e)
+        traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
+
 
 def generate_bot_reply(session_id, user_message):
     payload = {
