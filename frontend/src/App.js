@@ -18,10 +18,7 @@ import OverviewTab from "./components/OverviewTab/OverviewTab";
 import styles from "./App.module.scss";
 import MapWithFeedback from "./components/MapWithFeedback/MapWithFeedback";
 import ModalPopUp from "./components/ModalPopUp/ModalPopUp";
-// Import Leaflet CSS (only once in the app)
 import 'leaflet/dist/leaflet.css';
-
-// Optional: Fix for default marker icons
 import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -35,13 +32,16 @@ function AppWrapper() {
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [summaries, setSummaries] = useState([]);
+  const [actionPlanCache, setActionPlanCache] = useState({});
+  const [overviewCache, setOverviewCache] = useState(null);
 
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleModalUp = () => {
-    if (!isModalOpen) { setIsModalOpen(true) } else { setIsModalOpen(false)}
-  }
+    setIsModalOpen(prev => !prev);
+  };
+
   const handleResetUserName = () => {
     setShowOnboarding(false);
     setSubmittedName(null);
@@ -67,12 +67,12 @@ function AppWrapper() {
     }
   };
 
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+  });
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
   const renderHeader = () => (
     <div className={styles.header}>
       {location.pathname === "/admin" ? (
@@ -115,16 +115,18 @@ L.Icon.Default.mergeOptions({
             Back to Admin Dashboard
           </button>
         </>
-      ) :location.pathname.startsWith("/ModalPopUp") ? (
+      ) : location.pathname.startsWith("/ModalPopUp") ? (
         <>
-          <button onClick={()=>{handleModalUp()}} className={styles.showFeedbackButton}>Show Feedback  count</button>
-           <ModalPopUp isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-            <MapWithFeedback/>
-        </ModalPopUp>
+          <button onClick={handleModalUp} className={styles.showFeedbackButton}>
+            Show Feedback  count
+          </button>
+          <ModalPopUp isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+            <MapWithFeedback />
+          </ModalPopUp>
         </>
       ) : null}
     </div>
-  );  
+  );
 
   return (
     <>
@@ -135,9 +137,7 @@ L.Icon.Default.mergeOptions({
           path="/"
           element={
             showOnboarding ? (
-              <ProgressiveOnboarding
-                onFinish={() => setShowOnboarding(false)}
-              />
+              <ProgressiveOnboarding onFinish={() => setShowOnboarding(false)} />
             ) : (
               <FeedbackChat
                 toggleAdmin={() => navigate("/admin")}
@@ -157,6 +157,8 @@ L.Icon.Default.mergeOptions({
                 <OverviewTab
                   category="View All"
                   summaries={summaries}
+                  overviewCache={overviewCache}
+                  setOverviewCache={setOverviewCache}
                 />
               )}
               {activeTab === "feedback" && (
@@ -168,26 +170,31 @@ L.Icon.Default.mergeOptions({
               {activeTab === "action" && (
                 <ActionPlanTab
                   summaries={summaries}
+                  actionPlanCache={actionPlanCache}
+                  setActionPlanCache={setActionPlanCache}
                 />
               )}
               {activeTab === "feedBackWithGeo" && (
                 <div>
-                  { !isModalOpen && <button onClick={()=>{handleModalUp()}} className={styles.showFeedbackButton}>Show Feedback  count</button>
-                  }
-                
-                <ModalPopUp isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                 <MapWithFeedback/>
-             </ModalPopUp>
-             </div>
+                  {!isModalOpen && (
+                    <button
+                      onClick={handleModalUp}
+                      className={styles.showFeedbackButton}
+                    >
+                      Show Feedback  count
+                    </button>
+                  )}
+
+                  <ModalPopUp isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                    <MapWithFeedback />
+                  </ModalPopUp>
+                </div>
               )}
             </div>
           }
         />
 
-        <Route
-          path="/conversation/:sessionId"
-          element={<ConversationPage />}
-        />
+        <Route path="/conversation/:sessionId" element={<ConversationPage />} />
       </Routes>
     </>
   );

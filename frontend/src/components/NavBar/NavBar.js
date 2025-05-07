@@ -4,7 +4,6 @@ function NavBar({ activeTab, setActiveTab }) {
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "feedback", label: "Feedback List" },
-    { id: "duplicates", label: "Duplicates" },
     { id: "action", label: "Action Plan" },
     { id: "feedBackWithGeo", label: "Feedback with Geo Location" }
   ];

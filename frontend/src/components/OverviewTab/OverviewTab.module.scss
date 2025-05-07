@@ -123,3 +123,27 @@
     display: block;
   }
   
+  .loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+  
+  .spinner {
+    font-size: 2rem;
+    animation: spin 1s linear infinite;
+    color: #1976d2;
+    margin-bottom: 0.5rem;
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  

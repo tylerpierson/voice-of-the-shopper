@@ -13,6 +13,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from datetime import datetime, timedelta
 from collections import defaultdict
+import re
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
 
 app = FastAPI()
 
@@ -285,28 +289,102 @@ def generate_action_plan(session_id: str):
 
     return {"action_plan": response.json()['choices'][0]['message']['content']}
 
+# === Utility: Clean text for similarity ===
+def clean(text):
+    return re.sub(r'[^\w\s]', '', text.lower()).strip()
+
+# === Action Plan Generation Endpoint ===
 @app.post("/generate-category-action-plan")
 def generate_category_action_plan(payload: dict = Body(...)):
     category = payload.get("category", "")
     cursor = conn.execute(
-        "SELECT summary FROM feedback_summary WHERE department = ?" if category != "View All" else "SELECT summary FROM feedback_summary",
+        "SELECT session_id, summary FROM feedback_summary WHERE department = ?" if category != "View All" else "SELECT session_id, summary FROM feedback_summary",
         (category,) if category != "View All" else ()
     )
-    summaries = cursor.fetchall()
-    combined = "\n".join(summary[0] for summary in summaries)
+    rows = cursor.fetchall()
+    raw_summaries = [row[1] for row in rows]
+    session_ids = [row[0] for row in rows]
+    summaries = [clean(s) for s in raw_summaries]
 
+    # === Step 1: Generate raw action plan ===
     prompt = (
-        f"You are an operations analyst. Given the following user feedback summaries from the '{category}' category, generate a high-impact action plan "
-        "to improve satisfaction or business performance. Be specific, practical, and concise.\n\n"
-        f"Summaries:\n{combined}\n\nAction Plan:"
+        f"You are an operations analyst reviewing customer feedback in the '{category}' category. "
+        "Prioritize recurring complaints and negative sentiment. Focus on practical steps to resolve problems and prevent future dissatisfaction. "
+        "Be clear, specific, and concise in each recommendation.\n\n"
+        f"Feedback Summaries:\n{chr(10).join(raw_summaries)}\n\n"
+        "Action Plan (bullet points):"
     )
-
     response = requests.post("http://localhost:11434/v1/chat/completions", json={
         "model": "mistral",
         "messages": [{"role": "user", "content": prompt}]
     })
+    raw_plan = response.json()['choices'][0]['message']['content']
 
-    return { "action_plan": response.json()['choices'][0]['message']['content'] }
+    # === Step 2: Clean bullet/numbered steps ===
+    lines = [line.strip() for line in raw_plan.split("\n") if line.strip()]
+    cleaned_steps = [re.sub(r'^[-•\d\.\)\s]+', '', line) for line in lines]
+    cleaned_steps = [clean(step) for step in cleaned_steps]
+
+    # === Step 3: Estimate impact/effort ===
+    impact_map = {"High": 3, "Medium": 2, "Low": 1}
+    effort_map = {"Easy": 1, "Moderate": 2, "Complex": 3}
+
+    rated = []
+    for step in cleaned_steps:
+        try:
+            impact = requests.post("http://localhost:8000/assess-impact", json={"action_plan": step}).json()['impact']
+            effort = requests.post("http://localhost:8000/assess-effort", json={"action_plan": step}).json()['effort']
+            impact_score = impact_map.get(impact, 0)
+            effort_score = effort_map.get(effort, 3)
+        except Exception as e:
+            print("Rating error:", e)
+            impact, effort, impact_score, effort_score = "Unknown", "Unknown", 0, 3
+
+        rated.append({
+            "step": step,
+            "impact": impact,
+            "effort": effort,
+            "impact_score": impact_score,
+            "effort_score": effort_score
+        })
+
+    # === Step 4: Match summaries to all steps based on similarity threshold ===
+    step_vecs = model.encode([r["step"] for r in rated])
+    summary_vecs = model.encode(summaries)
+
+    for i, vec in enumerate(step_vecs):
+        sims = cosine_similarity([vec], summary_vecs)[0]
+        matches = [
+            {"summary": raw_summaries[j], "session_id": session_ids[j], "score": float(sims[j])}
+            for j in range(len(sims)) if sims[j] >= 0.6
+        ]
+        rated[i]["matches"] = matches
+        rated[i]["match_count"] = len(matches)
+        rated[i]["avg_score"] = round(
+            sum(m["score"] for m in matches) / len(matches), 4
+        ) if matches else 0
+
+    # === Step 5: Sort steps by match count, confidence, impact, effort ===
+    sorted_rated = sorted(
+        rated,
+        key=lambda r: (-r["match_count"], -r["avg_score"], -r["impact_score"], r["effort_score"])
+    )
+
+    return {
+        "action_plan": [r["step"] for r in sorted_rated],
+        "clusters": [r["matches"] for r in sorted_rated],
+        "meta": [
+            {
+                "impact": r["impact"],
+                "effort": r["effort"],
+                "impact_score": r["impact_score"],
+                "effort_score": r["effort_score"],
+                "match_count": r["match_count"],
+                "avg_score": r["avg_score"]
+            }
+            for r in sorted_rated
+        ]
+    }
 
 @app.post("/assess-impact-effort")
 def assess_impact_effort(payload: dict = Body(...)):
@@ -383,7 +461,6 @@ def assess_effort(payload: dict = Body(...)):
         print("❌ Error in effort assessment:", e)
         return {"effort": ""}
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
 
 @app.get("/sentiment-breakdown")
 def sentiment_breakdown(days: int = Query(30, description="Number of days to look back")):

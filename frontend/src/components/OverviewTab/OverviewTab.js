@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import styles from "./OverviewTab.module.scss";
 import Chart from "chart.js/auto";
+import { FaSpinner } from "react-icons/fa";
 
 const categories = [
   "View All",
@@ -14,9 +15,8 @@ const categories = [
   "Family-Friendliness"
 ];
 
-function OverviewTab() {
-  const [sentimentData, setSentimentData] = useState([]);
-  const [summaries, setSummaries] = useState([]);
+function OverviewTab({ summaries, overviewCache, setOverviewCache }) {
+  const [sentimentData, setSentimentData] = useState(overviewCache?.sentimentData || []);
   const [days, setDays] = useState(30);
   const [activeChart, setActiveChart] = useState("bar");
   const [selectedCategory, setSelectedCategory] = useState("View All");
@@ -24,11 +24,19 @@ function OverviewTab() {
   const [fetchedCategories, setFetchedCategories] = useState(new Set());
 
   useEffect(() => {
-    fetch("http://localhost:8000/get-summaries")
-      .then((res) => res.json())
-      .then(setSummaries)
-      .catch(console.error);
-  }, []);
+    if (!overviewCache?.summaries) {
+      fetch("http://localhost:8000/get-summaries")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setOverviewCache(prev => ({ ...prev, summaries: data }));
+          } else {
+            console.error("Unexpected response:", data);
+          }
+        })
+        .catch((err) => console.error("Failed to fetch summaries:", err));
+    }
+  }, [overviewCache, setOverviewCache]);
 
   useEffect(() => {
     if (!selectedCategory || fetchedCategories.has(selectedCategory)) return;
@@ -48,11 +56,12 @@ function OverviewTab() {
           };
         });
         setSentimentData(formatted);
+        setOverviewCache(prev => ({ ...prev, sentimentData: formatted }));
         setFetchedCategories(prev => new Set(prev).add(selectedCategory));
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedCategory, days, fetchedCategories]);
+  }, [selectedCategory, days, fetchedCategories, setOverviewCache]);
 
   const filteredData =
     selectedCategory === "View All"
@@ -69,7 +78,7 @@ function OverviewTab() {
       ? filteredData.map((s) => s.total)
       : (() => {
           const match = filteredData[0];
-          return match ? [match.positive, match.negative] : [0, 0, 0];
+          return match ? [match.positive, match.negative] : [0, 0];
         })();
 
   useEffect(() => {
@@ -188,6 +197,8 @@ function OverviewTab() {
     document.body.removeChild(link);
   };
 
+  const summariesFromCache = overviewCache?.summaries || [];
+
   const topPositiveCategories = [...sentimentData]
     .sort((a, b) => b.positive_pct - a.positive_pct)
     .slice(0, 3);
@@ -196,7 +207,7 @@ function OverviewTab() {
     .sort((a, b) => b.negative_pct - a.negative_pct)
     .slice(0, 3);
 
-  const filteredSummaries = summaries.filter((s) =>
+  const filteredSummaries = summariesFromCache.filter((s) =>
     selectedCategory === "View All" ? false : s.department === selectedCategory
   );
 
@@ -251,7 +262,12 @@ function OverviewTab() {
         )}
       </div>
 
-      {loading && <p className={styles.loading}>Loading data...</p>}
+      {loading && (
+        <div className={styles.loadingContainer}>
+          <FaSpinner className={styles.spinner} />
+          <p className={styles.loading}>Loading data...</p>
+        </div>
+      )}
 
       {!loading && selectedCategory && filteredData.length > 0 && (
         <>
