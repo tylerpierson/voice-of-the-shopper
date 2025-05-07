@@ -35,6 +35,13 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   const [tempNameInput, setTempNameInput] = useState("");
   const [nameSubmitted, setNameSubmitted] = useState(false);
   const [placeholder,setPlaceholder] = useState('Type or click mic to speak...');
+  const [showMap, setShowMap] = useState(false);
+  const defaultPosition = { lat: 40.7128, lng: -74.006 };
+  const [selectedLocation, setSelectedLocation] = useState({
+    lat: 40.7128,
+    lng: -74.006,
+    address: '',
+  });
 
   const chatEndRef = useRef(null);
 
@@ -97,6 +104,13 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   const onPlaceHolderChange =(text) =>{
     setPlaceholder(text)
   }
+
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
+    // This is the parent function that updates the location
+    // Close the map when the address is selected
+    setShowMap(false);
+  };
 
   const finalizeFeedback = async () => {
     try {
@@ -194,6 +208,53 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   return (
     <div className={style.container}>
       <h2>Feedback Assistant</h2>
+      <div style={{ padding: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button
+            className={style['plusCircleButton']}
+            onClick={() => setShowMap(true)}
+            title="Select Location"
+            onMouseEnter={(e) => {
+              const tooltip = document.createElement('div');
+              tooltip.textContent = "Click to select a location on the map";
+              tooltip.style.position = 'absolute';
+              tooltip.style.backgroundColor = '#333';
+              tooltip.style.color = '#fff';
+              tooltip.style.padding = '5px';
+              tooltip.style.borderRadius = '5px';
+              tooltip.style.fontSize = '12px';
+              tooltip.style.top = `${e.clientY + 10}px`;
+              tooltip.style.left = `${e.clientX + 10}px`;
+              tooltip.style.zIndex = '1000';
+              tooltip.className = 'custom-tooltip';
+              document.body.appendChild(tooltip);
+            }}
+            onMouseLeave={() => {
+              const tooltip = document.querySelector('.custom-tooltip');
+              if (tooltip) {
+                tooltip.remove();
+              }
+            }}
+          >
+          <FaLocationDot size={20} />
+          </button>
+          <span style={{ fontWeight: 'bold', color: 'blue' }}></span>
+            {selectedLocation.address ? `${selectedLocation.address}` : ''}         
+        </div>
+        {showMap && (
+          <div className={style.mapOverlay}>
+            <div className={style.mapPopup}>
+              <MapPopup
+                show={showMap}
+                onClose={() => setShowMap(false)}
+                position={{ lat: selectedLocation.lat, lng: selectedLocation.lng }}
+                onLocationSelect={handleLocationSelect}
+                draggable={true}
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
       {!selectedCategory && (
         <div className={style.categoryButtons}>
@@ -230,14 +291,14 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
       <LocationWithCountry />
     </div>
       <form onSubmit={handleSubmit} className={style.inputForm}>
-        <input
+      <input
           type="text"
           value={input}
           onChange={handleInputChange}
           placeholder={placeholder}
           disabled={!selectedCategory}
         />
-        <VoiceInput onSpeechResult={handleSpeechInput} handlePlaceHolder={onPlaceHolderChange} />
+        <VoiceInput onSpeechResult={handleSpeechInput} handlePlaceHolder={onPlaceHolderChange} /> {/* Pass the function as a prop */}
         <button type="submit" className={style.sendButton} disabled={!selectedCategory || !input.trim()}>
           Send
         </button>
