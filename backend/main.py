@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Path, Body, HTTPException
+from fastapi import FastAPI, Path, Body, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -11,6 +11,8 @@ import ast
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from datetime import datetime, timedelta
+from collections import defaultdict
 
 app = FastAPI()
 
@@ -200,22 +202,26 @@ def update_user_name(session_id: str, payload: dict = Body(...)):
 
 @app.get("/get-summaries")
 def get_summaries():
-    cursor = conn.execute(
-        "SELECT session_id, summary, department, sentiment, seen, user_name, timestamp FROM feedback_summary ORDER BY timestamp DESC"
-    )
-    results = []
-    for row in cursor.fetchall():
-        session_id, summary, department, sentiment, seen, user_name, timestamp = row
-        results.append({
-            "session_id": session_id,
-            "summary": summary,
-            "department": department,
-            "sentiment": sentiment or "Unknown",
-            "seen": bool(seen),
-            "user_name": user_name or "Anonymous",
-            "timestamp": timestamp
-        })
-    return results
+    try:
+        cursor = conn.execute(
+            "SELECT session_id, summary, department, sentiment, seen, user_name, timestamp FROM feedback_summary ORDER BY timestamp DESC"
+        )
+        results = []
+        for row in cursor.fetchall():
+            session_id, summary, department, sentiment, seen, user_name, timestamp = row
+            results.append({
+                "session_id": session_id,
+                "summary": summary,
+                "department": department,
+                "sentiment": sentiment or "Unknown",
+                "seen": bool(seen),
+                "user_name": user_name or "Anonymous",
+                "timestamp": timestamp
+            })
+        return results
+    except Exception as e:
+        print("❌ get-summaries failed:", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/mark-seen/{category}")
 def mark_seen(category: str = Path(..., title="Category name")):
@@ -370,48 +376,81 @@ def assess_effort(payload: dict = Body(...)):
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-@app.post("/find-duplicates")
-def find_duplicates(payload: dict = Body(...)):
-    category = payload.get("category", "View All")
+@app.get("/sentiment-breakdown")
+def sentiment_breakdown(days: int = Query(30, description="Number of days to look back")):
+    cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
 
-    # Fetch summaries
-    cursor = conn.execute(
-        "SELECT session_id, summary, department FROM feedback_summary WHERE department = ?" if category != "View All" else
-        "SELECT session_id, summary, department FROM feedback_summary",
-        (category,) if category != "View All" else ()
-    )
-    records = cursor.fetchall()
+    query = """
+    SELECT department, sentiment, COUNT(*) as count
+    FROM feedback_summary
+    WHERE timestamp >= ?
+    GROUP BY department, sentiment
+    """
+    rows = conn.execute(query, (cutoff,)).fetchall()
 
-    summaries = [{"session_id": sid, "summary": text, "department": dept} for sid, text, dept in records]
-    texts = [s["summary"] for s in summaries]
+    result = {}
+    for dept, sentiment, count in rows:
+        if dept not in result:
+            result[dept] = {"positive": 0, "neutral": 0, "negative": 0}
+        result[dept][sentiment.lower()] += count
 
-    if len(texts) < 2:
-        return {"groups": []}  # Not enough to compare
+    return result
 
-    embeddings = model.encode(texts, convert_to_tensor=True).cpu().numpy()
-    similarity_matrix = cosine_similarity(embeddings)
+@app.get("/sentiment-trend")
+def sentiment_trend(category: str = Query("View All"), group_by: str = Query("day")):
+    cutoff = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
+    query = """
+    SELECT timestamp, sentiment FROM feedback_summary
+    WHERE timestamp >= ?
+    """
+    params = [cutoff]
 
-    visited = set()
-    groups = []
+    if category != "View All":
+        query += " AND department = ?"
+        params.append(category)
 
-    threshold = 0.80  # You can tune this
+    rows = conn.execute(query, params).fetchall()
 
-    for i in range(len(texts)):
-        if i in visited:
-            continue
+    grouped = defaultdict(lambda: {"positive": 0, "neutral": 0, "negative": 0})
 
-        group = [summaries[i]]
-        visited.add(i)
+    for timestamp, sentiment in rows:
+        dt = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+        if group_by == "week":
+            key = dt.strftime("%Y-W%U")
+        else:
+            key = dt.strftime("%Y-%m-%d")
+        grouped[key][sentiment.lower()] += 1
 
-        for j in range(i + 1, len(texts)):
-            if j not in visited and similarity_matrix[i][j] >= threshold:
-                group.append(summaries[j])
-                visited.add(j)
+    result = [
+        {"date": k, **v} for k, v in sorted(grouped.items())
+    ]
+    return result
 
-        if len(group) > 1:
-            groups.append(group)
+@app.get("/top-themes")
+def top_themes(category: str = Query(...)):
+    query = "SELECT summary FROM feedback_summary WHERE department = ?"
+    rows = conn.execute(query, (category,)).fetchall()
+    from collections import Counter
+    import re
 
-    return {"groups": groups}
+    all_words = []
+    for (summary,) in rows:
+        words = re.findall(r"\b\w{5,}\b", summary.lower())
+        all_words.extend(words)
+
+    counter = Counter(all_words)
+    most_common = counter.most_common(10)
+    return [{"term": term, "count": count} for term, count in most_common]
+
+@app.get("/top-quotes")
+def top_quotes(category: str = Query(...)):
+    query = "SELECT summary, sentiment FROM feedback_summary WHERE department = ?"
+    rows = conn.execute(query, (category,)).fetchall()
+
+    positive = [text for text, s in rows if s.lower() == "positive"][:5]
+    negative = [text for text, s in rows if s.lower() == "negative"][:5]
+
+    return {"positive": positive, "negative": negative}
 
 @app.get("/get-locationCount")
 def get_summaries():

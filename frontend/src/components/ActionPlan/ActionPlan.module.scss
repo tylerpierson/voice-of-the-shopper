@@ -1,4 +1,38 @@
-.actionPlanCard {
+/* ActionPlan.module.scss */
+
+.actionPlanContainer {
+    text-align: center;
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f4f8ff;
+    border: 1px solid #cddbf3;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  
+  .actionPlanButton {
+    background-color: #2a4d8f;
+    color: #ffffff;
+    font-weight: 600;
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  
+    &:hover {
+      background-color: #183266;
+    }
+  }
+  
+  .actionPlanLoading {
+    text-align: center;
+    font-style: italic;
+    color: #666;
+  }
+  
+  .actionPlanCard {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -23,7 +57,7 @@
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   }
   
-  .topControls {
+  .actionPlanTopControls {
     position: absolute;
     top: 10px;
     right: 16px;
@@ -33,8 +67,8 @@
     z-index: 2;
   }
   
-  .expandButton,
-  .closeButton {
+  .actionPlanExpandButton,
+  .actionPlanCloseButton {
     background-color: #007bff;
     color: white;
     border: none;
@@ -45,11 +79,11 @@
     transition: background-color 0.2s ease;
   }
   
-  .expandButton:hover {
+  .actionPlanExpandButton:hover {
     background-color: #0056b3;
   }
   
-  .closeButton {
+  .actionPlanCloseButton {
     background-color: #dc3545;
   
     &:hover {
@@ -57,32 +91,26 @@
     }
   }
   
-  h3 {
-    margin-top: 2.5rem; // ensures no overlap with the buttons
+  .actionPlanCard h3 {
+    margin-top: 2.5rem;
     margin-bottom: 0.75rem;
     font-size: 1.25rem;
     color: #2a4d8f;
   }
   
-  p {
+  .actionPlanCard p {
     font-size: 1rem;
     color: #333;
     white-space: pre-wrap;
   }
   
-  .loading {
-    text-align: center;
-    font-style: italic;
-    color: #666;
-  }
-  
-  ul {
+  .actionPlanCard ul {
     list-style: none;
     padding: 0;
     margin-top: 1rem;
   }
   
-  li {
+  .actionPlanCard li {
     background-color: #ffffff;
     border: 1px solid #e1e4e8;
     border-radius: 8px;
@@ -103,14 +131,14 @@
     }
   }
   
-  .metaInfo {
+  .actionPlanMetaInfo {
     display: flex;
     gap: 1rem;
     font-size: 0.85rem;
     color: #555;
   }
   
-  .metaTag {
+  .actionPlanMetaTag {
     background-color: #edf2fa;
     border-radius: 4px;
     padding: 4px 10px;
@@ -119,30 +147,11 @@
     border: 1px solid #d1e0f5;
   }
   
-  /* New styles for report display */
-  .reportReadyLinkContainer {
-    text-align: center;
-    margin-top: 1rem;
-    padding: 1rem;
-    background-color: #f4f8ff;
-    border: 1px solid #cddbf3;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  }
+  /* Admin Dashboard Tab Content */
+  .adminTabContent {
+    padding: 2rem 5rem;
   
-  .openReportLink {
-    background-color: #2a4d8f;
-    color: #ffffff;
-    font-weight: 600;
-    border: none;
-    padding: 10px 20px;
-    font-size: 0.95rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.25s ease;
-  
-    &:hover {
-      background-color: #183266;
+    @media (max-width: 600px) {
+      padding: 1rem;
     }
   }
-  

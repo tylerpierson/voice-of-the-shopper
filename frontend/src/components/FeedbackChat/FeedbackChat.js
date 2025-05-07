@@ -23,7 +23,6 @@ const categoryPrompts = {
 
 function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   const [transcript, setTranscript] = useState('');
-  // const [inputText, setInputText] = useState('')
   const [messages, setMessages] = useState([
     { sender: "assistant", text: "👋 Hi there! Please select a category and tell me about your experience." }
   ]);
@@ -34,7 +33,8 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   const [showThankYou, setShowThankYou] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [tempNameInput, setTempNameInput] = useState("");
-  const[placeholder,setPlaceholder] = useState('Type or click mic to speak...');
+  const [nameSubmitted, setNameSubmitted] = useState(false);
+  const [placeholder,setPlaceholder] = useState('Type or click mic to speak...');
 
   const chatEndRef = useRef(null);
 
@@ -90,7 +90,6 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
     setInput(e.target.value);
   };
 
-  // Handles updates from speech input
   const handleSpeechInput = (speechText) => {
     setInput((prevText) => prevText + ' ' + speechText);
   };
@@ -130,6 +129,7 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
     setShowThankYou(false);
     setShowConfetti(false);
     setTempNameInput("");
+    setNameSubmitted(false);
   };
 
   if (showThankYou) {
@@ -149,7 +149,7 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
 
         if (res.ok) {
           setUserName(trimmed);
-          alert("✅ Name updated successfully.");
+          setNameSubmitted(true);
         } else {
           alert("❌ Failed to update name.");
         }
@@ -166,18 +166,22 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
           <h2>🎉 Thank you for your input!</h2>
           <p>We truly appreciate your feedback.</p>
 
-          <div className={style.nameInputRow}>
-            <input
-              type="text"
-              placeholder="Enter your name (optional)"
-              value={tempNameInput}
-              onChange={(e) => setTempNameInput(e.target.value)}
-              className={style.nameInput}
-            />
-            <button onClick={handleNameSubmit} className={style.submitButton}>
-              Submit Name
-            </button>
-          </div>
+          {!nameSubmitted ? (
+            <div className={style.nameInputRow}>
+              <input
+                type="text"
+                placeholder="Enter your name (optional)"
+                value={tempNameInput}
+                onChange={(e) => setTempNameInput(e.target.value)}
+                className={style.nameInput}
+              />
+              <button onClick={handleNameSubmit} className={style.submitButton}>
+                Submit Name
+              </button>
+            </div>
+          ) : (
+            <p className={style.nameSubmitted}>Name submitted successfully!</p>
+          )}
 
           <button onClick={resetToStart} className={style.finishButton}>
             Leave More Feedback
@@ -230,10 +234,10 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
           type="text"
           value={input}
           onChange={handleInputChange}
-          placeholder= {placeholder}
+          placeholder={placeholder}
           disabled={!selectedCategory}
         />
-        <VoiceInput onSpeechResult={handleSpeechInput} handlePlaceHolder={onPlaceHolderChange}/> {/* Pass the function as a prop */}
+        <VoiceInput onSpeechResult={handleSpeechInput} handlePlaceHolder={onPlaceHolderChange} />
         <button type="submit" className={style.sendButton} disabled={!selectedCategory || !input.trim()}>
           Send
         </button>
