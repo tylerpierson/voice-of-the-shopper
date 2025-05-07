@@ -362,49 +362,6 @@ def assess_effort(payload: dict = Body(...)):
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-@app.post("/find-duplicates")
-def find_duplicates(payload: dict = Body(...)):
-    category = payload.get("category", "View All")
-
-    # Fetch summaries
-    cursor = conn.execute(
-        "SELECT session_id, summary, department FROM feedback_summary WHERE department = ?" if category != "View All" else
-        "SELECT session_id, summary, department FROM feedback_summary",
-        (category,) if category != "View All" else ()
-    )
-    records = cursor.fetchall()
-
-    summaries = [{"session_id": sid, "summary": text, "department": dept} for sid, text, dept in records]
-    texts = [s["summary"] for s in summaries]
-
-    if len(texts) < 2:
-        return {"groups": []}  # Not enough to compare
-
-    embeddings = model.encode(texts, convert_to_tensor=True).cpu().numpy()
-    similarity_matrix = cosine_similarity(embeddings)
-
-    visited = set()
-    groups = []
-
-    threshold = 0.80  # You can tune this
-
-    for i in range(len(texts)):
-        if i in visited:
-            continue
-
-        group = [summaries[i]]
-        visited.add(i)
-
-        for j in range(i + 1, len(texts)):
-            if j not in visited and similarity_matrix[i][j] >= threshold:
-                group.append(summaries[j])
-                visited.add(j)
-
-        if len(group) > 1:
-            groups.append(group)
-
-    return {"groups": groups}
-
 @app.get("/sentiment-breakdown")
 def sentiment_breakdown(days: int = Query(30, description="Number of days to look back")):
     cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
