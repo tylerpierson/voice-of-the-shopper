@@ -289,3 +289,29 @@
     }
   }
   
+  .plusCircleButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 10%;
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  .plusCircleButton:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+  }
+
+  .plusCircleButton:active {
+    background-color: #003f7f;
+    transform: scale(0.95);
+  }
+  

@@ -34,9 +34,14 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     session_id TEXT,
     role TEXT,
     text TEXT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    location TEXT DEFAULT NULL
 )
 ''')
+try:
+    conn.execute("ALTER TABLE feedback_summary ADD COLUMN sentiment TEXT")
+except sqlite3.OperationalError:
+    pass
 
 conn.execute('''
 CREATE TABLE IF NOT EXISTS feedback_summary (
@@ -47,7 +52,8 @@ CREATE TABLE IF NOT EXISTS feedback_summary (
     sentiment TEXT,
     seen INTEGER DEFAULT 0,
     user_name TEXT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    "location" TEXT DEFAULT NULL
 )
 ''')
 
@@ -66,6 +72,11 @@ try:
 except sqlite3.OperationalError:
     pass
 
+try:
+    conn.execute("ALTER TABLE feedback_summary ADD COLUMN location TEXT")
+except sqlite3.OperationalError:
+    pass
+
 conn.execute("UPDATE feedback_summary SET sentiment = 'Unknown' WHERE sentiment IS NULL")
 conn.commit()
 
@@ -76,15 +87,17 @@ class Feedback(BaseModel):
     session_id: Optional[str] = None
     category: Optional[str] = None
     user_name: Optional[str] = None
+    location: Optional[str] = None
 
 @app.post("/submit-feedback")
 def submit_feedback(feedback: Feedback):
     try:
         session_id = feedback.session_id if feedback.session_id else str(uuid4())
+        location = feedback.location if feedback.location else "Unknown"
 
         conn.execute(
-            "INSERT INTO chat_messages (session_id, role, text) VALUES (?, ?, ?)",
-            (session_id, "user", feedback.message)
+            "INSERT INTO chat_messages (session_id, role, text,location) VALUES (?, ?, ?,?)",
+            (session_id, "user", feedback.message,location)
         )
         conn.commit()
 
@@ -146,6 +159,7 @@ def summarize_conversation(session_id: str):
 class FinalizePayload(BaseModel):
     user_name: str
     category: str = None
+    
 
 @app.post("/finalize-summary/{session_id}")
 def finalize_summary(session_id: str, payload: FinalizePayload):
@@ -437,3 +451,17 @@ def top_quotes(category: str = Query(...)):
     negative = [text for text, s in rows if s.lower() == "negative"][:5]
 
     return {"positive": positive, "negative": negative}
+
+@app.get("/get-locationCount")
+def get_summaries():
+    cursor = conn.execute(
+        "SELECT location, COUNT(*) AS count FROM feedback_summary GROUP BY location"
+    )
+    results = []
+    for row in cursor.fetchall():
+        location, count = row
+        results.append({
+            "location": location,
+            "count": count
+        })
+    return results

@@ -6,6 +6,7 @@ function NavBar({ activeTab, setActiveTab }) {
     { id: "feedback", label: "Feedback List" },
     { id: "duplicates", label: "Duplicates" },
     { id: "action", label: "Action Plan" },
+    { id: "feedBackWithGeo", label: "Feedback with Geo Location" }
   ];
 
   return (

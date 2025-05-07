@@ -1,0 +1,44 @@
+.micContainer {
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .micButton {
+    background: none;
+    border: 2px solid #ffffff; /* White border */
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 60px;
+    padding: 0;
+    padding-bottom: 5px;
+    transition: border-color 0.3s ease-in-out;
+  }
+  
+  .micIcon {
+    font-size: 28px;
+    color: #007bff; /* Blue mic by default */
+    transition: color 0.3s ease-in-out;
+  }
+  
+  .micActive .micIcon {
+    color: #ff3b30; /* Red mic when speaking */
+    animation: flicker 0.6s infinite alternate;
+  }
+  
+  @keyframes flicker {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  

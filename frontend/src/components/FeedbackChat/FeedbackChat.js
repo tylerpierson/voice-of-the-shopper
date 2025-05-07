@@ -3,6 +3,7 @@ import style from "./FeedbackChat.module.scss";
 import ChatMessage from "../ChatMessage/ChatMessage";
 import Confetti from "react-confetti";
 import VoiceInput from '../VoiceInput/VoiceInput';
+import MapPopup from '../MapPopup/MapPopup';
 
 const categories = [
   "Taste", "Packaging", "Price", "Availability",
@@ -34,6 +35,13 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   const [tempNameInput, setTempNameInput] = useState("");
   const [nameSubmitted, setNameSubmitted] = useState(false);
   const [placeholder,setPlaceholder] = useState('Type or click mic to speak...');
+  const [showMap, setShowMap] = useState(false);
+  const defaultPosition = { lat: 40.7128, lng: -74.006 };
+  const [selectedLocation, setSelectedLocation] = useState({
+    lat: 40.7128,
+    lng: -74.006,
+    address: '',
+  });
 
   const chatEndRef = useRef(null);
 
@@ -97,6 +105,13 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
     setPlaceholder(text)
   }
 
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
+    // This is the parent function that updates the location
+    // Close the map when the address is selected
+    setShowMap(false);
+  };
+
   const finalizeFeedback = async () => {
     try {
       await fetch(`http://localhost:8000/finalize-summary/${sessionId}`, {
@@ -104,7 +119,8 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_name: userName?.trim() || "Anonymous",
-          category: selectedCategory
+          category: selectedCategory,
+          location: ''
         })
       });
 
@@ -192,7 +208,6 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   return (
     <div className={style.container}>
       <h2>Feedback Assistant</h2>
-
       {!selectedCategory && (
         <div className={style.categoryButtons}>
           {categories.map((cat) => (
@@ -224,16 +239,17 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
           ))}
         </div>
       )}
-
+      <div>
+    </div>
       <form onSubmit={handleSubmit} className={style.inputForm}>
-        <input
+      <input
           type="text"
           value={input}
           onChange={handleInputChange}
           placeholder={placeholder}
           disabled={!selectedCategory}
         />
-        <VoiceInput onSpeechResult={handleSpeechInput} handlePlaceHolder={onPlaceHolderChange} />
+        <VoiceInput onSpeechResult={handleSpeechInput} handlePlaceHolder={onPlaceHolderChange} /> {/* Pass the function as a prop */}
         <button type="submit" className={style.sendButton} disabled={!selectedCategory || !input.trim()}>
           Send
         </button>

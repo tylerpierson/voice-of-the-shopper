@@ -165,6 +165,7 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
   const paginatedFeedbacks = sortedFeedbacks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
+
     <div className={styles.container}>
       <h1 className={styles.title}>Customer Feedback List</h1>
 
