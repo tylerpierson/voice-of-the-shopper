@@ -15,10 +15,9 @@ import NavBar from "./components/NavBar/NavBar";
 import DuplicatesTab from "./components/DuplicatesTab/DuplicatesTab";
 import ActionPlanTab from "./components/ActionPlanTab/ActionPlanTab";
 import OverviewTab from "./components/OverviewTab/OverviewTab";
+import MapWithFeedback from "./components/MapWithFeedback/MapWithFeedback";
 
 import styles from "./App.module.scss";
-import MapWithFeedback from "./components/MapWithFeedback/MapWithFeedback";
-import ModalPopUp from "./components/ModalPopUp/ModalPopUp";
 // Import Leaflet CSS (only once in the app)
 import 'leaflet/dist/leaflet.css';
 
@@ -112,14 +111,7 @@ L.Icon.Default.mergeOptions({
             Back to Admin Dashboard
           </button>
         </>
-      ) :location.pathname.startsWith("/ModalPopUp") ? (
-        <>
-          <button onClick={()=>{handleModalUp()}} className={styles.showFeedbackButton}>Show Feedback  count</button>
-           <ModalPopUp isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-            <MapWithFeedback/>
-        </ModalPopUp>
-        </>
-      ) : null}
+      )  : null}
     </div>
   );  
 
