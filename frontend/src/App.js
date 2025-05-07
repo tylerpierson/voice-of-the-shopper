@@ -12,7 +12,6 @@ import ProgressiveOnboarding from "./components/ProgressiveOnboarding/Progressiv
 import ConversationPage from "./pages/ConversationPage/ConversationPage";
 import AdminPage from "./pages/AdminPage/AdminPage";
 import NavBar from "./components/NavBar/NavBar";
-import DuplicatesTab from "./components/DuplicatesTab/DuplicatesTab";
 import ActionPlanTab from "./components/ActionPlanTab/ActionPlanTab";
 import OverviewTab from "./components/OverviewTab/OverviewTab";
 
@@ -165,9 +164,6 @@ L.Icon.Default.mergeOptions({
                   currentCategory={activeCategory}
                   setActiveCategory={setActiveCategory}
                 />
-              )}
-              {activeTab === "duplicates" && (
-                <DuplicatesTab />
               )}
               {activeTab === "action" && (
                 <ActionPlanTab

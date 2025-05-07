@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.scss";
-import ActionPlan from "../../components/ActionPlan/ActionPlan";
 
 const categories = [
   "View All", "Taste", "Packaging", "Price", "Availability",
@@ -287,13 +286,6 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
             Next &gt;
           </button>
         </div>
-      )}
-
-      {selectedSessionId && (
-        <ActionPlan
-          sessionId={selectedSessionId}
-          onClose={() => setSelectedSessionId(null)}
-        />
       )}
     </div>
   );
