@@ -107,7 +107,7 @@ function OverviewTab({ summaries, overviewCache, setOverviewCache }) {
           plugins: {
             legend: {
               position: "bottom",
-              labels: { font: { size: 10 }, boxWidth: 10 }
+              labels: { font: { size: 18 }, boxWidth: 18 }
             }
           }
         }
@@ -115,12 +115,9 @@ function OverviewTab({ summaries, overviewCache, setOverviewCache }) {
     }
 
     if (activeChart === "bar" && barCtx) {
-      if (selectedCategory === "View All") {
-        window.sentimentChart = new Chart(barCtx, {
-          type: "bar",
-          data: {
-            labels: filteredData.map((s) => s.department),
-            datasets: [
+      const datasets =
+        selectedCategory === "View All"
+          ? [
               {
                 label: "Positive",
                 data: filteredData.map((s) => s.positive),
@@ -132,40 +129,58 @@ function OverviewTab({ summaries, overviewCache, setOverviewCache }) {
                 backgroundColor: "#F44336"
               }
             ]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { position: "bottom" } },
-            scales: {
-              x: { stacked: true },
-              y: { stacked: true, beginAtZero: true }
-            }
-          }
-        });
-      } else {
-        const cat = filteredData[0] || { positive: 0, negative: 0 };
-        window.sentimentChart = new Chart(barCtx, {
-          type: "bar",
-          data: {
-            labels: ["Positive", "Negative"],
-            datasets: [
+          : [
               {
                 label: selectedCategory,
-                data: [cat.positive, cat.negative],
+                data: [filteredData[0]?.positive || 0, filteredData[0]?.negative || 0],
                 backgroundColor: ["#4CAF50", "#F44336"]
               }
-            ]
+            ];
+    
+      const chartLabels = selectedCategory === "View All"
+        ? filteredData.map((s) =>
+            s.department.includes(" ")
+              ? s.department.replace(/\s+/g, "\n")
+              : s.department
+          )
+        : ["Positive", "Negative"];
+    
+      window.sentimentChart = new Chart(barCtx, {
+        type: "bar",
+        data: {
+          labels: chartLabels,
+          datasets
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: {
+              callbacks: {
+                title: (tooltipItems) => tooltipItems[0].label
+              }
+            }
           },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: { beginAtZero: true }
+          scales: {
+            x: {
+              ticks: {
+                autoSkip: false,
+                maxRotation: 45,
+                minRotation: 0,
+                font: { size: 12 },
+                callback: function (value, index, values) {
+                  const label = this.getLabelForValue(value);
+                  return label.split('\n');
+                }
+              }
+            },
+            y: {
+              beginAtZero: true
             }
           }
-        });
-      }
-    }
+        }
+      });
+    }       
   }, [filteredData, activeChart, selectedCategory]);
 
   const downloadCSV = () => {
@@ -219,19 +234,26 @@ function OverviewTab({ summaries, overviewCache, setOverviewCache }) {
     .filter((s) => s.sentiment.toLowerCase() === "negative")
     .slice(0, 3);
 
+  const totalPositive = sentimentData.reduce((a, b) => a + b.positive, 0);
+  const totalNegative = sentimentData.reduce((a, b) => a + b.negative, 0);
+
   return (
     <div className={styles.container}>
       <h2>Sentiment Overview</h2>
 
+      <div className={styles.exportContainer}>
+        <button onClick={downloadCSV}>📄 Export CSV</button>
+      </div>
+
       <div className={styles.controls}>
-        <label>Timeframe:</label>
+        <label title="Choose how far back to analyze feedback">Timeframe:</label>
         <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
           <option value={7}>Last 7 Days</option>
           <option value={30}>Last 30 Days</option>
           <option value={90}>Last 90 Days</option>
         </select>
 
-        <label>Category:</label>
+        <label title="Filter by product or service category">Category:</label>
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
@@ -241,25 +263,20 @@ function OverviewTab({ summaries, overviewCache, setOverviewCache }) {
           ))}
         </select>
 
-        {selectedCategory && (
-          <>
-            <div className={styles.chartTabs}>
-              <button
-                className={activeChart === "bar" ? styles.activeTab : ""}
-                onClick={() => setActiveChart("bar")}
-              >
-                Sentiment Breakdown
-              </button>
-              <button
-                className={activeChart === "pie" ? styles.activeTab : ""}
-                onClick={() => setActiveChart("pie")}
-              >
-                Pie View
-              </button>
-            </div>
-            <button onClick={downloadCSV}>📄 Export CSV</button>
-          </>
-        )}
+        <div className={styles.chartTabs}>
+          <button
+            className={activeChart === "bar" ? styles.activeTab : ""}
+            onClick={() => setActiveChart("bar")}
+          >
+            Sentiment Breakdown
+          </button>
+          <button
+            className={activeChart === "pie" ? styles.activeTab : ""}
+            onClick={() => setActiveChart("pie")}
+          >
+            Pie View
+          </button>
+        </div>
       </div>
 
       {loading && (
@@ -270,13 +287,28 @@ function OverviewTab({ summaries, overviewCache, setOverviewCache }) {
       )}
 
       {!loading && selectedCategory && filteredData.length > 0 && (
-        <>
-          <div className={styles.chartContainer}>
-            {activeChart === "bar" && <canvas id="sentimentBarChart" />}
-            {activeChart === "pie" && <canvas id="sentimentPieChart" className={styles.pieChart} />}
-          </div>
-
+        <div className={styles.contentWrapper}>
           <div className={styles.breakdownSection}>
+            {selectedCategory === "View All" ? (
+              <div className={styles.metricsBox}>
+                <h3>📊 Overall Feedback Summary</h3>
+                <ul>
+                  <li><strong>Total:</strong> {summariesFromCache.length}</li>
+                  <li><strong>Positive:</strong> {totalPositive}</li>
+                  <li><strong>Negative:</strong> {totalNegative}</li>
+                </ul>
+              </div>
+            ) : (
+              <div className={styles.metricsBox}>
+                <h3>📊 Feedback Summary ({selectedCategory})</h3>
+                <ul>
+                  <li><strong>Total:</strong> {filteredSummaries.length}</li>
+                  <li><strong>Positive:</strong> {topPositiveSummaries.length}</li>
+                  <li><strong>Negative:</strong> {topNegativeSummaries.length}</li>
+                </ul>
+              </div>
+            )}
+
             {selectedCategory === "View All" ? (
               <>
                 <h3>📈 Top Positive Categories</h3>
@@ -302,7 +334,12 @@ function OverviewTab({ summaries, overviewCache, setOverviewCache }) {
               </>
             )}
           </div>
-        </>
+
+          <div className={styles.chartContainer}>
+            {activeChart === "bar" && <canvas id="sentimentBarChart" />}
+            {activeChart === "pie" && <canvas id="sentimentPieChart" className={styles.pieChart} />}
+          </div>
+        </div>
       )}
     </div>
   );

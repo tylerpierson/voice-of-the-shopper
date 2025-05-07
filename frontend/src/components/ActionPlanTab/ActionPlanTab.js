@@ -1,7 +1,6 @@
 // ActionPlanTab.js
 import { useEffect, useState } from "react";
 import styles from "./ActionPlanTab.module.scss";
-import { FaSpinner } from "react-icons/fa";
 
 const categories = [
   "View All", "Taste", "Packaging", "Price", "Availability",
@@ -15,7 +14,7 @@ function ActionPlanTab({ actionPlanCache, setActionPlanCache }) {
   const [meta, setMeta] = useState([]);
   const [expandedStep, setExpandedStep] = useState(null);
   const [loading, setLoading] = useState(false);
-  const itemsPerPage = 5;
+  const itemsPerPage = 15;
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -69,58 +68,99 @@ function ActionPlanTab({ actionPlanCache, setActionPlanCache }) {
     setExpandedStep(index === expandedStep ? null : index);
   };
 
+  const formatSentence = (text) => {
+    if (!text) return "";
+    let formatted = text.charAt(0).toUpperCase() + text.slice(1);
+    if (!/[.!?]$/.test(formatted)) {
+      formatted += ".";
+    }
+    return formatted;
+  };
+
   return (
     <div className={styles.container}>
-      <h2>📋 Action Plans by Category</h2>
+      <h2>Action Plans by Category</h2>
 
-      <select
-        className={styles.dropdown}
-        value={selectedCategory}
-        onChange={(e) => {
-          setSelectedCategory(e.target.value);
-          setPage(1);
-          setExpandedStep(null);
-        }}
-      >
-        {categories.map(cat => (
-          <option key={cat} value={cat}>{cat}</option>
-        ))}
-      </select>
+      <div className={styles.controls}>
+        <label htmlFor="category-select">Category:</label>
+        <select
+          id="category-select"
+          className={styles.dropdown}
+          value={selectedCategory}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setPage(1);
+            setExpandedStep(null);
+          }}
+        >
+          {categories.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+      </div>
 
       {loading ? (
         <div className={styles.loadingContainer}>
-          <FaSpinner className={styles.spinner} />
-          <p className={styles.loading}>Loading action plan...</p>
+          <div className={styles.spinner}></div>
+          <p>Generating action plan...</p>
         </div>
       ) : (
-        <ul className={styles.actionList}>
-          {visibleSteps.map((step, idx) => {
-            const globalIdx = (page - 1) * itemsPerPage + idx;
-            const metaInfo = meta[globalIdx] || {};
-            const summaries = clusters[globalIdx] || [];
+        <div className={styles.tableWrapper}>
+          <table className={styles.actionTable}>
+            <thead>
+              <tr>
+                <th>Action Step</th>
+                <th>Impact</th>
+                <th>Effort</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleSteps.map((step, idx) => {
+                const globalIdx = (page - 1) * itemsPerPage + idx;
+                const metaInfo = meta[globalIdx] || {};
+                const summaries = clusters[globalIdx] || [];
+                const isExpanded = expandedStep === globalIdx;
 
-            return (
-              <li key={globalIdx} className={styles.actionItem}>
-                <div className={styles.stepHeader} onClick={() => handleExpand(globalIdx)}>
-                  <span className={styles.dropdownArrow}>{expandedStep === globalIdx ? "▼" : "▶"}</span>
-                  <span>{step}</span>
-                  <span className={styles.metaInfo}>
-                    ({metaInfo.match_count} matches, avg score: {metaInfo.avg_score})
-                  </span>
-                </div>
-                {expandedStep === globalIdx && (
-                  <ul className={styles.summaryList}>
-                    {summaries.map((s, i) => (
-                      <li key={i} className={styles.summary}>
-                        {s.summary} <span className={styles.confidence}>({(s.score * 100).toFixed(1)}%)</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                return (
+                  <>
+                    <tr
+                      key={globalIdx}
+                      className={styles.stepRow}
+                      onClick={() => summaries.length > 0 && handleExpand(globalIdx)}
+                    >
+                      <td>
+                        {summaries.length > 0 && (
+                          <span className={styles.dropdownArrow}>{isExpanded ? "▼" : "▶"}</span>
+                        )}
+                        {formatSentence(step)}
+                      </td>
+                      <td className={styles.impact}>{metaInfo.impact || "-"}</td>
+                      <td className={styles.effort}>{metaInfo.effort || "-"}</td>
+                    </tr>
+                    {isExpanded && summaries.length > 0 && (
+                      <tr className={styles.expandedRow} key={`expand-${globalIdx}`}>
+                        <td colSpan={3}>
+                          <div className={styles.expandContent}>
+                            <ul className={styles.summaryList}>
+                              {summaries.map((s, i) => (
+                                <li key={i} className={styles.summary}>
+                                  <a href={`/conversation/${s.session_id}`} className={styles.summaryLink}>
+                                    {s.summary}
+                                  </a>{" "}
+                                  <span className={styles.confidence}>({(s.score * 100).toFixed(1)}%)</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {!loading && totalPages > 1 && (
