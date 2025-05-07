@@ -192,3 +192,21 @@
     padding: 8px 14px;
   }
 }
+
+.showFeedbackButton {
+  margin: 20px;
+  display: block;
+  background-color: #007bff;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+}

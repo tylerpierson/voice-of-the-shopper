@@ -14,6 +14,15 @@ import ProgressiveOnboarding from "./components/ProgressiveOnboarding/Progressiv
 import ActionPlan from "./components/ActionPlan/ActionPlan";
 
 import styles from "./App.module.scss";
+import MapWithFeedback from "./components/MapWithFeedback/MapWithFeedback";
+import ModalPopUp from "./components/ModalPopUp/ModalPopUp";
+// Import Leaflet CSS (only once in the app)
+import 'leaflet/dist/leaflet.css';
+
+// Optional: Fix for default marker icons
+import L from 'leaflet';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 function AppWrapper() {
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -21,10 +30,14 @@ function AppWrapper() {
   const [activeCategory, setActiveCategory] = useState("View All");
   const [triggerCategoryReport, setTriggerCategoryReport] = useState(false);
   const [allSummaries, setAllSummaries] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
 
+  const handleModalUp = () => {
+    if (!isModalOpen) { setIsModalOpen(true) } else { setIsModalOpen(false)}
+  }
   const handleResetUserName = () => {
     setShowOnboarding(false);
     setSubmittedName(null);
@@ -41,6 +54,22 @@ function AppWrapper() {
     }
   };
 
+  const fetchLocationCount = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/get-location-count");
+      const data = await res.json();
+      setAllSummaries(data);
+    } catch (err) {
+      console.error("Failed to load summaries:", err);
+    }
+  };
+
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
   const renderHeader = () => (
     <div className={styles.header}>
       <img src="/img/vos_logo.png" alt="Voice of the Shopper" className={styles.logo} />
@@ -74,6 +103,10 @@ function AppWrapper() {
           >
             Build Category Report
           </button>
+          <button onClick={()=>{handleModalUp()}} className={styles.showFeedbackButton}>Show Feedback  count</button>
+          <ModalPopUp isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                <MapWithFeedback/>
+            </ModalPopUp>
         </div>
       )}
 

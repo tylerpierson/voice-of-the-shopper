@@ -3,6 +3,7 @@ import style from "./FeedbackChat.module.scss";
 import ChatMessage from "../ChatMessage/ChatMessage";
 import Confetti from "react-confetti";
 import VoiceInput from '../VoiceInput/VoiceInput';
+import LocationWithCountry from '../LocationWithCountry/LocationWithCountry'; 
 
 const categories = [
   "Taste", "Packaging", "Price", "Availability",
@@ -105,7 +106,8 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_name: userName?.trim() || "Anonymous",
-          category: selectedCategory
+          category: selectedCategory,
+          location: ''
         })
       });
 
@@ -220,7 +222,9 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
           ))}
         </div>
       )}
-
+      <div>
+      <LocationWithCountry />
+    </div>
       <form onSubmit={handleSubmit} className={style.inputForm}>
         <input
           type="text"

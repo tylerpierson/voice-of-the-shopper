@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.scss";
 import ActionPlan from "../../components/ActionPlan/ActionPlan";
+import MapWithFeedback from "../../components/MapWithFeedback/MapWithFeedback";
 
 const categories = [
   "View All", "Taste", "Packaging", "Price", "Availability",
@@ -165,6 +166,7 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
   const paginatedFeedbacks = sortedFeedbacks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
+
     <div className={styles.container}>
       <h1 className={styles.title}>Admin Feedback Dashboard</h1>
 
