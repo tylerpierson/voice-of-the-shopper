@@ -79,8 +79,6 @@ function ActionPlanTab({ actionPlanCache, setActionPlanCache }) {
 
   return (
     <div className={styles.container}>
-      <h2>Action Plans by Category</h2>
-
       <div className={styles.controls}>
         <label htmlFor="category-select">Category:</label>
         <select

@@ -239,8 +239,6 @@ function OverviewTab({ summaries, overviewCache, setOverviewCache }) {
 
   return (
     <div className={styles.container}>
-      <h2>Sentiment Overview</h2>
-
       <div className={styles.exportContainer}>
         <button onClick={downloadCSV}>📄 Export CSV</button>
       </div>

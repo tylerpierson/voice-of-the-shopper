@@ -1,6 +1,6 @@
 .container {
     padding: 2rem;
-    max-width: 90%;
+    max-width: 100%;
     margin: auto;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #2c3e50;
@@ -186,5 +186,40 @@
   
   .impact, .effort {
     width: 100px;
+  }
+  
+  @media (max-width: 768px) {
+    .controls {
+      flex-direction: column;
+      align-items: stretch;
+      label,
+      select {
+        width: 100%;
+      }
+    }
+  
+    .actionTable {
+        font-size: 0.9rem;
+    
+        th:nth-child(2),
+        td:nth-child(2),
+        th:nth-child(3),
+        td:nth-child(3) {
+        display: none;
+        }
+    }
+    
+  
+    .summaryList {
+      padding-left: 1rem;
+      .summary {
+        font-size: 0.9rem;
+      }
+    }
+  
+    .pagination {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
   }
   
