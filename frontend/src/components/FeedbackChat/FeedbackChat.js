@@ -3,7 +3,7 @@ import style from "./FeedbackChat.module.scss";
 import ChatMessage from "../ChatMessage/ChatMessage";
 import Confetti from "react-confetti";
 import VoiceInput from '../VoiceInput/VoiceInput';
-import LocationWithCountry from '../LocationWithCountry/LocationWithCountry'; 
+import MapPopup from '../MapPopup/MapPopup';
 
 const categories = [
   "Taste", "Packaging", "Price", "Availability",
@@ -208,54 +208,6 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
   return (
     <div className={style.container}>
       <h2>Feedback Assistant</h2>
-      <div style={{ padding: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <button
-            className={style['plusCircleButton']}
-            onClick={() => setShowMap(true)}
-            title="Select Location"
-            onMouseEnter={(e) => {
-              const tooltip = document.createElement('div');
-              tooltip.textContent = "Click to select a location on the map";
-              tooltip.style.position = 'absolute';
-              tooltip.style.backgroundColor = '#333';
-              tooltip.style.color = '#fff';
-              tooltip.style.padding = '5px';
-              tooltip.style.borderRadius = '5px';
-              tooltip.style.fontSize = '12px';
-              tooltip.style.top = `${e.clientY + 10}px`;
-              tooltip.style.left = `${e.clientX + 10}px`;
-              tooltip.style.zIndex = '1000';
-              tooltip.className = 'custom-tooltip';
-              document.body.appendChild(tooltip);
-            }}
-            onMouseLeave={() => {
-              const tooltip = document.querySelector('.custom-tooltip');
-              if (tooltip) {
-                tooltip.remove();
-              }
-            }}
-          >
-          <FaLocationDot size={20} />
-          </button>
-          <span style={{ fontWeight: 'bold', color: 'blue' }}></span>
-            {selectedLocation.address ? `${selectedLocation.address}` : ''}         
-        </div>
-        {showMap && (
-          <div className={style.mapOverlay}>
-            <div className={style.mapPopup}>
-              <MapPopup
-                show={showMap}
-                onClose={() => setShowMap(false)}
-                position={{ lat: selectedLocation.lat, lng: selectedLocation.lng }}
-                onLocationSelect={handleLocationSelect}
-                draggable={true}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
       {!selectedCategory && (
         <div className={style.categoryButtons}>
           {categories.map((cat) => (
@@ -288,7 +240,6 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
         </div>
       )}
       <div>
-      <LocationWithCountry />
     </div>
       <form onSubmit={handleSubmit} className={style.inputForm}>
       <input

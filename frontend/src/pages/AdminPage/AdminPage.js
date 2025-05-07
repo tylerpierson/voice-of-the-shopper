@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AdminPage.module.scss";
 import ActionPlan from "../../components/ActionPlan/ActionPlan";
-import MapWithFeedback from "../../components/MapWithFeedback/MapWithFeedback";
 
 const categories = [
   "View All", "Taste", "Packaging", "Price", "Availability",

@@ -33,7 +33,7 @@ function AppWrapper() {
   const [activeCategory, setActiveCategory] = useState("View All");
   const [triggerCategoryReport, setTriggerCategoryReport] = useState(false);
   const [allSummaries, setAllSummaries] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [summaries, setSummaries] = useState([]);
 
@@ -173,6 +173,16 @@ L.Icon.Default.mergeOptions({
                 <ActionPlanTab
                   summaries={summaries}
                 />
+              )}
+              {activeTab === "feedBackWithGeo" && (
+                <div>
+                  { !isModalOpen && <button onClick={()=>{handleModalUp()}} className={styles.showFeedbackButton}>Show Feedback  count</button>
+                  }
+                
+                <ModalPopUp isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                 <MapWithFeedback/>
+             </ModalPopUp>
+             </div>
               )}
             </div>
           }
