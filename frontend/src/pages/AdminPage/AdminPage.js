@@ -166,9 +166,9 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
 
   return (
 
-    <div className={styles.container}>
-      <h1 className={styles.title}>Customer Feedback List</h1>
-
+    <div className={styles.feedbackListContainer}>
+      <h1 className={styles.title } >Customer Feedback List</h1>
+<div className={styles.feedbackItem}>
       <div className={styles.tabs}>
         {categories.map((cat) => (
           <button
@@ -182,6 +182,7 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
             )}
           </button>
         ))}
+      </div>
       </div>
 
       <div className={styles.filters}>

@@ -16,6 +16,7 @@ import DuplicatesTab from "./components/DuplicatesTab/DuplicatesTab";
 import ActionPlanTab from "./components/ActionPlanTab/ActionPlanTab";
 import OverviewTab from "./components/OverviewTab/OverviewTab";
 import MapWithFeedback from "./components/MapWithFeedback/MapWithFeedback";
+import SideBar from "./components/SideBar/SideBar"; // import the sidebar
 
 import styles from "./App.module.scss";
 // Import Leaflet CSS (only once in the app)
@@ -25,8 +26,9 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import Footer from "./components/Footer/Footer";
 
-function AppWrapper() {
+function AppWrapper(className) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [submittedName, setSubmittedName] = useState(null);
   const [activeCategory, setActiveCategory] = useState("View All");
@@ -34,9 +36,11 @@ function AppWrapper() {
   const [allSummaries, setAllSummaries] = useState([]);
   const [activeTab, setActiveTab] = useState("overview");
   const [summaries, setSummaries] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const navigate = useNavigate();
   const location = useLocation();
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   const handleResetUserName = () => {
     setShowOnboarding(false);
@@ -73,29 +77,11 @@ L.Icon.Default.mergeOptions({
     <div className={styles.header}>
       {location.pathname === "/admin" ? (
         <>
-          <img
-            src="/img/vos_logo.png"
-            alt="Voice of the Shopper"
-            className={styles.logo}
-          />
           <NavBar activeTab={activeTab} setActiveTab={setActiveTab} />
-          <button className={styles.backButton} onClick={handleResetUserName}>
-            Back to Chatbot
-          </button>
         </>
       ) : location.pathname === "/" ? (
         <>
-          <img
-            src="/img/vos_logo.png"
-            alt="Voice of the Shopper"
-            className={styles.logo}
-          />
-          <button
-            className={styles.backButton}
-            onClick={() => navigate("/admin")}
-          >
-            Go to Admin Dashboard
-          </button>
+      
         </>
       ) : location.pathname.startsWith("/conversation") ? (
         <>
@@ -116,9 +102,9 @@ L.Icon.Default.mergeOptions({
   );  
 
   return (
-    <>
+    <div className={className}>
       {renderHeader()}
-
+      <div className={styles.contentBody}>
       <Routes>
         <Route
           path="/"
@@ -174,14 +160,20 @@ L.Icon.Default.mergeOptions({
           element={<ConversationPage />}
         />
       </Routes>
-    </>
+      </div>
+      {/* <Footer/> */}
+    </div>
   );
 }
 
 function App() {
   return (
     <Router>
-      <AppWrapper />
+      <div className={styles.appLayout}>
+        <SideBar/>
+        <AppWrapper className={styles.mainContent}/>
+      </div>
+      {/* <Footer className={styles.Footer}/> */}
     </Router>
   );
 }

@@ -1,19 +1,19 @@
 /* ===== Layout Containers ===== */
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #ddd;
-  flex-wrap: wrap;
-  gap: 1rem;
+// .header {
+//   display: flex;
+//   align-items: center;
+//   justify-content: space-between;
+//   padding: 1rem 2rem;
+//   border-bottom: 1px solid #ddd;
+//   flex-wrap: wrap;
+//   gap: 1rem;
 
-  @media (max-width: 600px) {
-    flex-direction: column;
-    align-items: center;
-  }
-}
+//   @media (max-width: 600px) {
+//     flex-direction: column;
+//     align-items: center;
+//   }
+// }
 
 .logo {
   height: 8rem;
@@ -259,4 +259,73 @@
   &:hover {
     background-color: #0056b3;
   }
+}
+.layoutContainer {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.appWrapper {
+  flex-grow: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  background-color: #f0f4f8;
+}
+
+.mainContent {
+  flex: 1;
+  overflow:hidden;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  margin-left: 240px;
+  height: 100vh;
+}
+
+.sidebarContent {
+  flex-grow: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.footer {
+  padding: 0.8rem 1rem;
+  background-color: #3f7538; // Your green or preferred color
+  color: white;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.handleResetUserName {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background-color: #f9fafb;
+}
+
+.appLayout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.header {
+  height: 100px;
+  background-color: #002b7f;
+  color: white;
+  display: flex;
+  align-items: center;
+  // padding: 0 1rem;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.contentBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background-color: #f9fafb;
 }
