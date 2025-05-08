@@ -39,7 +39,7 @@
 .tabContent {
   padding: 2rem 5rem;
 
-  @media (max-width: 600px) {
+  @media (max-width: 500px) {
     padding: 1rem;
   }
 }
@@ -276,13 +276,15 @@
 
 .mainContent {
   flex: 1;
-  overflow:hidden;
-  padding: 1rem;
-  background-color: #f9f9f9;
+  // width: calc(100% - 240px); // Adjust based on your sidebar width
+  // height: 100vh;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  // padding: 1rem;
+  // box-sizing: border-box;
+  // position: relative;
   display: flex;
   flex-direction: column;
-  margin-left: 240px;
-  height: 100vh;
 }
 
 .sidebarContent {
@@ -309,6 +311,7 @@
 .appLayout {
   display: flex;
   height: 100vh;
+  // width: 100%;
   overflow: hidden;
 }
 
@@ -320,12 +323,14 @@
   align-items: center;
   // padding: 0 1rem;
   flex-shrink: 0;
-  width: 100%;
+  width: 75vw;
 }
 
 .contentBody {
   flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
+  overflow:hidden;
+  display: flex;
+  flex-direction: column;
+  // padding: 1rem;
   background-color: #f9fafb;
 }

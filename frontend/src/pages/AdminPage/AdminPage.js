@@ -164,140 +164,156 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
   const pageCount = Math.ceil(sortedFeedbacks.length / itemsPerPage);
   const paginatedFeedbacks = sortedFeedbacks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  return (
+return (
+      <div className={styles.container}>
+        {/* Title */}
+        <header className={styles.header}>
+          <h1 className={styles.title}>Customer Feedback List</h1>
+        </header>
 
-    <div className={styles.feedbackListContainer}>
-      <h1 className={styles.title } >Customer Feedback List</h1>
-<div className={styles.feedbackItem}>
-      <div className={styles.tabs}>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            className={`${styles.tabButton} ${cat === currentCategory ? styles.activeTab : ""}`}
-            onClick={() => handleTabClick(cat)}
+        {/* Tabs */}
+        <section className={styles.tabsWrapper}>
+          <div className={styles.tabs}>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                className={`${styles.tabButton} ${cat === currentCategory ? styles.activeTab : ""}`}
+                onClick={() => handleTabClick(cat)}
+              >
+                {cat}
+                {cat !== "View All" && unseenCounts[cat] && (
+                  <span className={styles.notificationDot}>{unseenCounts[cat]}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Filters */}
+        <section className={styles.filters}>
+          <input
+            type="text"
+            placeholder="Search by user or summary..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={styles.searchInput}
+          />
+
+          <select
+            value={currentCategory === "View All" ? "" : currentCategory}
+            onChange={(e) => handleTabClick(e.target.value || "View All")}
+            className={styles.dropdown}
           >
-            {cat}
-            {cat !== "View All" && unseenCounts[cat] && (
-              <span className={styles.notificationDot}>{unseenCounts[cat]}</span>
-            )}
-          </button>
-        ))}
-      </div>
-      </div>
+            <option value="">All Categories</option>
+            {categories.filter((c) => c !== "View All").map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
 
-      <div className={styles.filters}>
-        <input
-          type="text"
-          placeholder="Search by user or summary..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className={styles.searchInput}
-        />
+          <select
+            value={filterSentiment}
+            onChange={(e) => setFilterSentiment(e.target.value)}
+            className={styles.dropdown}
+          >
+            <option value="">All Sentiments</option>
+            {sentiments.map((s) => (
+              <option key={s} value={s}>
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </option>
+            ))}
+          </select>
+        </section>
 
-        <select
-          value={currentCategory === "View All" ? "" : currentCategory}
-          onChange={(e) => handleTabClick(e.target.value || "View All")}
-          className={styles.dropdown}
-        >
-          <option value="">All Categories</option>
-          {categories.filter((c) => c !== "View All").map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-
-        <select
-          value={filterSentiment}
-          onChange={(e) => setFilterSentiment(e.target.value)}
-          className={styles.dropdown}
-        >
-          <option value="">All Sentiments</option>
-          {sentiments.map((s) => (
-            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-          ))}
-        </select>
-      </div>
-
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>
-              <div className={styles.sortHeader} onClick={() => handleSort("timestamp")}>Date
-                <span className={`${styles.sortArrow} ${sortKey === "timestamp" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
-                <span className={`${styles.sortArrow} ${sortKey === "timestamp" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
-              </div>
-            </th>
-            <th>Summary</th>
-            <th>
-              <div className={styles.sortHeader} onClick={() => handleSort("sentiment")}>Sentiment
-                <span className={`${styles.sortArrow} ${sortKey === "sentiment" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
-                <span className={`${styles.sortArrow} ${sortKey === "sentiment" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
-              </div>
-            </th>
-            <th>
-              <div className={styles.sortHeader} onClick={() => handleSort("department")}>Category
-                <span className={`${styles.sortArrow} ${sortKey === "department" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
-                <span className={`${styles.sortArrow} ${sortKey === "department" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
-              </div>
-            </th>
-            <th>
-              <div className={styles.sortHeader} onClick={() => handleSort("user_name")}>User
-                <span className={`${styles.sortArrow} ${sortKey === "user_name" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
-                <span className={`${styles.sortArrow} ${sortKey === "user_name" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
-              </div>
-            </th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedFeedbacks.map((fb) => (
-            <tr
-              key={fb.session_id}
-              className={styles.clickableRow}
-              onClick={() => goToConversationPage(fb.session_id)}
-            >
-              <td className={styles.td}>{formatDate(fb.timestamp)}</td>
-              <td className={styles.td}>{fb.summary}</td>
-              <td className={styles.td}>
-                <span style={getSentimentStyle(fb.sentiment)} className={styles.badge}>{fb.sentiment}</span>
-              </td>
-              <td className={styles.td}>{fb.department}</td>
-              <td className={styles.td}>{fb.user_name || "Anonymous"}</td>
-              <td className={styles.td}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteSummary(fb.session_id);
-                  }}
-                  className={styles.deleteBtn}
+        {/* Table */}
+        <section className={styles.tableSection}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>
+                  <div className={styles.sortHeader} onClick={() => handleSort("timestamp")}>
+                    Date
+                    <span className={`${styles.sortArrow} ${sortKey === "timestamp" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
+                    <span className={`${styles.sortArrow} ${sortKey === "timestamp" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
+                  </div>
+                </th>
+                <th>Summary</th>
+                <th>
+                  <div className={styles.sortHeader} onClick={() => handleSort("sentiment")}>
+                    Sentiment
+                    <span className={`${styles.sortArrow} ${sortKey === "sentiment" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
+                    <span className={`${styles.sortArrow} ${sortKey === "sentiment" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
+                  </div>
+                </th>
+                <th>
+                  <div className={styles.sortHeader} onClick={() => handleSort("department")}>
+                    Category
+                    <span className={`${styles.sortArrow} ${sortKey === "department" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
+                    <span className={`${styles.sortArrow} ${sortKey === "department" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
+                  </div>
+                </th>
+                <th>
+                  <div className={styles.sortHeader} onClick={() => handleSort("user_name")}>
+                    User
+                    <span className={`${styles.sortArrow} ${sortKey === "user_name" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
+                    <span className={`${styles.sortArrow} ${sortKey === "user_name" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
+                  </div>
+                </th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedFeedbacks.map((fb) => (
+                <tr
+                  key={fb.session_id}
+                  className={styles.clickableRow}
+                  onClick={() => goToConversationPage(fb.session_id)}
                 >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  <td className={styles.td}>{formatDate(fb.timestamp)}</td>
+                  <td className={styles.td}>{fb.summary}</td>
+                  <td className={styles.td}>
+                    <span style={getSentimentStyle(fb.sentiment)} className={styles.badge}>
+                      {fb.sentiment}
+                    </span>
+                  </td>
+                  <td className={styles.td}>{fb.department}</td>
+                  <td className={styles.td}>{fb.user_name || "Anonymous"}</td>
+                  <td className={styles.td}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSummary(fb.session_id);
+                      }}
+                      className={styles.deleteBtn}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
 
-      {pageCount > 1 && (
-        <div className={styles.pagination}>
-          <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
-            &lt; Prev
-          </button>
-          <span>Page {currentPage} of {pageCount}</span>
-          <button onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))} disabled={currentPage === pageCount}>
-            Next &gt;
-          </button>
-        </div>
-      )}
+        {/* Pagination */}
+        {pageCount > 1 && (
+          <div className={styles.pagination}>
+            <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+              &lt; Prev
+            </button>
+            <span>Page {currentPage} of {pageCount}</span>
+            <button onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))} disabled={currentPage === pageCount}>
+              Next &gt;
+            </button>
+          </div>
+        )}
 
-      {selectedSessionId && (
-        <ActionPlan
-          sessionId={selectedSessionId}
-          onClose={() => setSelectedSessionId(null)}
-        />
-      )}
-    </div>
-  );
+        {/* Action Plan */}
+        {selectedSessionId && (
+          <ActionPlan sessionId={selectedSessionId} onClose={() => setSelectedSessionId(null)} />
+        )}
+      </div>
+);
+
 }
 
 export default AdminPage;

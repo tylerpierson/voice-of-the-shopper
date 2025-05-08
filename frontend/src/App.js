@@ -85,7 +85,7 @@ L.Icon.Default.mergeOptions({
         </>
       ) : location.pathname.startsWith("/conversation") ? (
         <>
-          <img
+          {/* <img
             src="/img/vos_logo.png"
             alt="Voice of the Shopper"
             className={styles.logo}
@@ -95,7 +95,7 @@ L.Icon.Default.mergeOptions({
             onClick={() => navigate("/admin")}
           >
             Back to Admin Dashboard
-          </button>
+          </button> */}
         </>
       )  : null}
     </div>

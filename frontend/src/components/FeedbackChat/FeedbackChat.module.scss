@@ -11,15 +11,19 @@
 //     }
 //   }
 
-  .container {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    color: #333;
-    font-family: 'Segoe UI', sans-serif;
-    width: 100%;
-  }
+.container {
+  position: fixed;
+  // bottom: 0;
+  // left: 0;
+  width: 70vw;
+  max-height: 1000px;
+  overflow-y: auto;
+  background-color: #f4f8ff;
+  padding: 20px;
+  border-top: 1px solid #ddd;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+}
+
   
   h2 {
     margin-bottom: 20px;

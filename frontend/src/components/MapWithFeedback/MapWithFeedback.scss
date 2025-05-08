@@ -42,3 +42,17 @@
 .mapControlButton:hover {
   background-color: #007B9E;
 }
+
+
+container {
+  position: fixed;
+  // bottom: 0;
+  // left: 0;
+  width: 70vw;
+  max-height: 800px;
+  overflow-y: auto;
+  background-color: #f4f8ff;
+  padding: 20px;
+  border-top: 1px solid #ddd;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+}

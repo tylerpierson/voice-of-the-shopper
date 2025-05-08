@@ -36,22 +36,7 @@ useEffect(() => {
     });
     console.log("Rendering with feedbackCount:", feedbackCount);
   }, []);
-  
-// const fetchLocationCount = async () => {
-//         try {
-//           const res = await fetch("http://localhost:8000/get-locationCount");
-//           const data = await res.json();
-//           console.log("Fetched data:", data);
-//             const countMap = {};
-//             data.forEach(item => {
-//               countMap[item.location] = item.count;
-//             });
-//             console.error('fetching feedback count:', countMap);
-//             setFeedbackCount(countMap);
-          
-//         } catch (err) {
-//           console.error("Failed to load summaries:", err);
-//         }};
+
 const fetchLocationCount = async () => {
     try {
         const res = await fetch("http://localhost:8000/get-locationCount");
@@ -69,7 +54,7 @@ const fetchLocationCount = async () => {
 };
     
 return (
-        <MapContainer center={[20, 0]} zoom={2} style={{ height: '700px', width: '100%' }} whenCreated={setMapInstance}>
+        <MapContainer center={[20, 0]} zoom={2} style={{ height: '700px', width: '100%' }} whenCreated={setMapInstance} class="style.container">
             <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution=""
