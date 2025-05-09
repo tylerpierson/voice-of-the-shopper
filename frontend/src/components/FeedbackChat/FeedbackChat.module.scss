@@ -1,15 +1,29 @@
-.container {
-    padding: 24px;
-    max-width: 65rem;
-    margin: auto;
-    background-color: #fefefe;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+// .container {
+//     padding: 24px;
+//     max-width: 65rem;
+//     margin: auto;
+//     background-color: #fefefe;
+//     border-radius: 12px;
+//     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   
-    @media (max-width: 768px) {
-      padding: 16px;
-    }
-  }
+//     @media (max-width: 768px) {
+//       padding: 16px;
+//     }
+//   }
+
+.container {
+  position: fixed;
+  // bottom: 0;
+  // left: 0;
+  width: 70vw;
+  max-height: 1000px;
+  overflow-y: auto;
+  background-color: #f4f8ff;
+  padding: 20px;
+  border-top: 1px solid #ddd;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+}
+
   
   h2 {
     margin-bottom: 20px;
@@ -313,5 +327,41 @@
   .plusCircleButton:active {
     background-color: #003f7f;
     transform: scale(0.95);
+  }
+  
+  .feedbackContainer {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  }
+  
+  .feedbackInput {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    border: 1px solid #E0E0E0;
+    border-radius: 6px;
+    margin-bottom: 20px;
+  }
+  
+  .feedbackInput:focus {
+    border-color: #009CDB;
+    outline: none;
+  }
+  
+  .feedbackButton {
+    background-color: #004B87;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .feedbackButton:hover {
+    background-color: #007B9E;
   }
   

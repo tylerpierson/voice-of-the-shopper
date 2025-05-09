@@ -14,33 +14,33 @@ import AdminPage from "./pages/AdminPage/AdminPage";
 import NavBar from "./components/NavBar/NavBar";
 import ActionPlanTab from "./components/ActionPlanTab/ActionPlanTab";
 import OverviewTab from "./components/OverviewTab/OverviewTab";
+import MapWithFeedback from "./components/MapWithFeedback/MapWithFeedback";
+import SideBar from "./components/SideBar/SideBar"; // import the sidebar
 
 import styles from "./App.module.scss";
-import MapWithFeedback from "./components/MapWithFeedback/MapWithFeedback";
-import ModalPopUp from "./components/ModalPopUp/ModalPopUp";
+// Import Leaflet CSS (only once in the app)
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import Footer from "./components/Footer/Footer";
 
-function AppWrapper() {
+function AppWrapper(className) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [submittedName, setSubmittedName] = useState(null);
   const [activeCategory, setActiveCategory] = useState("View All");
   const [triggerCategoryReport, setTriggerCategoryReport] = useState(false);
   const [allSummaries, setAllSummaries] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [summaries, setSummaries] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [actionPlanCache, setActionPlanCache] = useState({});
   const [overviewCache, setOverviewCache] = useState(null);
 
+
   const navigate = useNavigate();
   const location = useLocation();
-
-  const handleModalUp = () => {
-    setIsModalOpen(prev => !prev);
-  };
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   const handleResetUserName = () => {
     setShowOnboarding(false);
@@ -58,13 +58,13 @@ function AppWrapper() {
   }, [location.pathname]);
 
   const fetchLocationCount = async () => {
-    try {
-      const res = await fetch("http://localhost:8000/get-location-count");
-      const data = await res.json();
-      setAllSummaries(data);
-    } catch (err) {
-      console.error("Failed to load summaries:", err);
-    }
+    // try {
+    //   const res = await fetch("http://localhost:8000/get-location-count");
+    //   const data = await res.json();
+    //   setAllSummaries(data);
+    // } catch (err) {
+    //   console.error("Failed to load summaries:", err);
+    // }
   };
 
   delete L.Icon.Default.prototype._getIconUrl;
@@ -77,33 +77,15 @@ function AppWrapper() {
     <div className={styles.header}>
       {location.pathname === "/admin" ? (
         <>
-          <img
-            src="/img/vos_logo.png"
-            alt="Voice of the Shopper"
-            className={styles.logo}
-          />
           <NavBar activeTab={activeTab} setActiveTab={setActiveTab} />
-          <button className={styles.backButton} onClick={handleResetUserName}>
-            Back to Chatbot
-          </button>
         </>
       ) : location.pathname === "/" ? (
         <>
-          <img
-            src="/img/vos_logo.png"
-            alt="Voice of the Shopper"
-            className={styles.logo}
-          />
-          <button
-            className={styles.backButton}
-            onClick={() => navigate("/admin")}
-          >
-            Go to Admin Dashboard
-          </button>
+      
         </>
       ) : location.pathname.startsWith("/conversation") ? (
         <>
-          <img
+          {/* <img
             src="/img/vos_logo.png"
             alt="Voice of the Shopper"
             className={styles.logo}
@@ -113,25 +95,16 @@ function AppWrapper() {
             onClick={() => navigate("/admin")}
           >
             Back to Admin Dashboard
-          </button>
+          </button> */}
         </>
-      ) : location.pathname.startsWith("/ModalPopUp") ? (
-        <>
-          <button onClick={handleModalUp} className={styles.showFeedbackButton}>
-            Show Feedback  count
-          </button>
-          <ModalPopUp isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-            <MapWithFeedback />
-          </ModalPopUp>
-        </>
-      ) : null}
+      )  : null}
     </div>
   );
 
   return (
-    <>
+    <div className={className}>
       {renderHeader()}
-
+      <div className={styles.contentBody}>
       <Routes>
         <Route
           path="/"
@@ -175,20 +148,7 @@ function AppWrapper() {
                 />
               )}
               {activeTab === "feedBackWithGeo" && (
-                <div>
-                  {!isModalOpen && (
-                    <button
-                      onClick={handleModalUp}
-                      className={styles.showFeedbackButton}
-                    >
-                      Show Feedback  count
-                    </button>
-                  )}
-
-                  <ModalPopUp isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                    <MapWithFeedback />
-                  </ModalPopUp>
-                </div>
+                <div><MapWithFeedback/></div>
               )}
             </div>
           }
@@ -196,14 +156,20 @@ function AppWrapper() {
 
         <Route path="/conversation/:sessionId" element={<ConversationPage />} />
       </Routes>
-    </>
+      </div>
+      {/* <Footer/> */}
+    </div>
   );
 }
 
 function App() {
   return (
     <Router>
-      <AppWrapper />
+      <div className={styles.appLayout}>
+        <SideBar/>
+        <AppWrapper className={styles.mainContent}/>
+      </div>
+      {/* <Footer className={styles.Footer}/> */}
     </Router>
   );
 }

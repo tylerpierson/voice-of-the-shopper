@@ -1,0 +1,67 @@
+.footer {
+  background-color: #3f7538; /* Deep Pepsi Green */
+  color: white;
+  padding: 0.1rem 1rem;
+  font-family: 'Arial', sans-serif;
+  font-size: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.footerContent {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.footerLeft {
+  flex: 1;
+  text-align: left;
+}
+
+.footerLogo {
+  width: 120px;
+  margin-bottom: 0.5rem;
+}
+
+.footerLeft p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.footerRight {
+  flex: 1;
+  text-align: right;
+}
+
+.footerRight p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.footerRight .socialIcons {
+  margin-top: 1rem;
+}
+
+.footerRight .socialIcon {
+  text-decoration: none;
+  color: white;
+  margin-left: 1rem;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.footerRight .socialIcon:hover {
+  color: #ef4b05; /* Pepsi Red on hover */
+}
+
+.footerRight .socialIcon:first-child {
+  margin-left: 0;
+}

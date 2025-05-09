@@ -15,8 +15,8 @@ function ConversationPage() {
   }, [sessionId]);
 
   return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.container}>
+
+      <div className={styles.actionPlanContainer}>
         <h2 className={styles.title}>Conversation Details</h2>
   
         <div className={styles.chatScrollArea}>
@@ -37,7 +37,6 @@ function ConversationPage() {
           </div>
         </div>
       </div>
-    </div>
   );  
 }
 

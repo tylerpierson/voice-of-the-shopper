@@ -163,57 +163,70 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
   const pageCount = Math.ceil(sortedFeedbacks.length / itemsPerPage);
   const paginatedFeedbacks = sortedFeedbacks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  return (
+return (
+      <div className={styles.container}>
+        {/* Title */}
+        <header className={styles.header}>
+          <h1 className={styles.title}>Customer Feedback List</h1>
+        </header>
 
-    <div className={styles.container}>
-      <h1 className={styles.title}>Customer Feedback List</h1>
+        {/* Tabs */}
+        <section className={styles.tabsWrapper}>
+          <div className={styles.tabs}>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                className={`${styles.tabButton} ${cat === currentCategory ? styles.activeTab : ""}`}
+                onClick={() => handleTabClick(cat)}
+              >
+                {cat}
+                {cat !== "View All" && unseenCounts[cat] && (
+                  <span className={styles.notificationDot}>{unseenCounts[cat]}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
 
-      <div className={styles.tabs}>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            className={`${styles.tabButton} ${cat === currentCategory ? styles.activeTab : ""}`}
-            onClick={() => handleTabClick(cat)}
+        {/* Filters */}
+        <section className={styles.filters}>
+          <input
+            type="text"
+            placeholder="Search by user or summary..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={styles.searchInput}
+          />
+
+          <select
+            value={currentCategory === "View All" ? "" : currentCategory}
+            onChange={(e) => handleTabClick(e.target.value || "View All")}
+            className={styles.dropdown}
           >
-            {cat}
-            {cat !== "View All" && unseenCounts[cat] && (
-              <span className={styles.notificationDot}>{unseenCounts[cat]}</span>
-            )}
-          </button>
-        ))}
-      </div>
+            <option value="">All Categories</option>
+            {categories.filter((c) => c !== "View All").map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
 
-      <div className={styles.filters}>
-        <input
-          type="text"
-          placeholder="Search by user or summary..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className={styles.searchInput}
-        />
+          <select
+            value={filterSentiment}
+            onChange={(e) => setFilterSentiment(e.target.value)}
+            className={styles.dropdown}
+          >
+            <option value="">All Sentiments</option>
+            {sentiments.map((s) => (
+              <option key={s} value={s}>
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </option>
+            ))}
+          </select>
+        </section>
 
-        <select
-          value={currentCategory === "View All" ? "" : currentCategory}
-          onChange={(e) => handleTabClick(e.target.value || "View All")}
-          className={styles.dropdown}
-        >
-          <option value="">All Categories</option>
-          {categories.filter((c) => c !== "View All").map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
+        {/* Table */}
+        {/* <section className={styles.tableSection}> */}
 
-        <select
-          value={filterSentiment}
-          onChange={(e) => setFilterSentiment(e.target.value)}
-          className={styles.dropdown}
-        >
-          <option value="">All Sentiments</option>
-          {sentiments.map((s) => (
-            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-          ))}
-        </select>
-      </div>
+            
 
       <table className={styles.table}>
         <thead>
@@ -290,5 +303,4 @@ function AdminPage({ onBackToChatbot, currentCategory, setActiveCategory, trigge
     </div>
   );
 }
-
 export default AdminPage;

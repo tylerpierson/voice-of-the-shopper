@@ -1,4 +1,126 @@
+:root {
+  --pepsi-blue: #002b7f;
+  --pepsi-red: #e4002b;
+  --pepsi-light-blue: #36a2eb;
+  --pepsi-yellow: #ffce56;
+  --pepsi-green: #4caf50;
+  --pepsi-gray: #f5f5f5;
+}
+
 .container {
+  position: fixed;
+  // bottom: 0;
+  // left: 0;
+  width: 70vw;
+  max-height: 800px;
+  overflow-y: auto;
+  background-color: #f4f8ff;
+  padding: 20px;
+  border-top: 1px solid #ddd;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+}
+
+
+h2 {
+  margin-bottom: 1.5rem;
+  color: var(--pepsi-blue);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  label {
+    font-weight: 600;
+    color: #555;
+  }
+
+  select {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    min-width: 150px;
+  }
+
+  button {
+    background-color: var(--pepsi-blue);
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background-color: var(--pepsi-red);
+    }
+  }
+}
+
+.chartTabs {
+  display: flex;
+  gap: 0.5rem;
+
+  button {
+    background-color: #eee;
+    color: #333;
+    border: none;
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+
+    &.activeTab {
+      background-color: var(--pepsi-red);
+      color: white;
+    }
+
+    &:hover {
+      background-color: var(--pepsi-blue);
+      color: white;
+    }
+  }
+}
+
+.chartContainer {
+  width: 100%;
+  max-width: 900px;
+  margin: 2rem auto;
+}
+
+.pieChart {
+  max-width: 400px;
+  margin: auto;
+}
+
+.breakdownSection {
+  margin-top: 2rem;
+
+  h3 {
+    margin-top: 1rem;
+    color: var(--pepsi-blue);
+  }
+
+  ul {
+    margin-top: 0.5rem;
+    padding-left: 1.25rem;
+    list-style-type: disc;
+    color: #444;
+  }
+
+  p {
+    margin-top: 0.5rem;
+    color: #777;
+  }
+}
+
+.loading {
+  font-style: italic;
+  color: var(--pepsi-blue);
   padding: 2rem;
   font-size: 1.1rem;
   line-height: 1.6;
