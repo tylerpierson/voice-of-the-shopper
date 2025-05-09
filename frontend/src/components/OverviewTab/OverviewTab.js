@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import styles from "./OverviewTab.module.scss";
 import Chart from "chart.js/auto";
+import { FaSpinner } from "react-icons/fa";
 
 const categories = [
   "View All",
@@ -14,9 +15,8 @@ const categories = [
   "Family-Friendliness"
 ];
 
-function OverviewTab() {
-  const [sentimentData, setSentimentData] = useState([]);
-  const [summaries, setSummaries] = useState([]);
+function OverviewTab({ summaries, overviewCache, setOverviewCache }) {
+  const [sentimentData, setSentimentData] = useState(overviewCache?.sentimentData || []);
   const [days, setDays] = useState(30);
   const [activeChart, setActiveChart] = useState("bar");
   const [selectedCategory, setSelectedCategory] = useState("View All");
@@ -24,11 +24,19 @@ function OverviewTab() {
   const [fetchedCategories, setFetchedCategories] = useState(new Set());
 
   useEffect(() => {
-    fetch("http://localhost:8000/get-summaries")
-      .then((res) => res.json())
-      .then(setSummaries)
-      .catch(console.error);
-  }, []);
+    if (!overviewCache?.summaries) {
+      fetch("http://localhost:8000/get-summaries")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setOverviewCache(prev => ({ ...prev, summaries: data }));
+          } else {
+            console.error("Unexpected response:", data);
+          }
+        })
+        .catch((err) => console.error("Failed to fetch summaries:", err));
+    }
+  }, [overviewCache, setOverviewCache]);
 
   useEffect(() => {
     if (!selectedCategory || fetchedCategories.has(selectedCategory)) return;
@@ -48,11 +56,12 @@ function OverviewTab() {
           };
         });
         setSentimentData(formatted);
+        setOverviewCache(prev => ({ ...prev, sentimentData: formatted }));
         setFetchedCategories(prev => new Set(prev).add(selectedCategory));
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedCategory, days, fetchedCategories]);
+  }, [selectedCategory, days, fetchedCategories, setOverviewCache]);
 
   const filteredData =
     selectedCategory === "View All"
@@ -69,7 +78,7 @@ function OverviewTab() {
       ? filteredData.map((s) => s.total)
       : (() => {
           const match = filteredData[0];
-          return match ? [match.positive, match.negative] : [0, 0, 0];
+          return match ? [match.positive, match.negative] : [0, 0];
         })();
 
   useEffect(() => {
@@ -98,7 +107,7 @@ function OverviewTab() {
           plugins: {
             legend: {
               position: "bottom",
-              labels: { font: { size: 10 }, boxWidth: 10 }
+              labels: { font: { size: 18 }, boxWidth: 18 }
             }
           }
         }
@@ -106,12 +115,9 @@ function OverviewTab() {
     }
 
     if (activeChart === "bar" && barCtx) {
-      if (selectedCategory === "View All") {
-        window.sentimentChart = new Chart(barCtx, {
-          type: "bar",
-          data: {
-            labels: filteredData.map((s) => s.department),
-            datasets: [
+      const datasets =
+        selectedCategory === "View All"
+          ? [
               {
                 label: "Positive",
                 data: filteredData.map((s) => s.positive),
@@ -123,40 +129,58 @@ function OverviewTab() {
                 backgroundColor: "#F44336"
               }
             ]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { position: "bottom" } },
-            scales: {
-              x: { stacked: true },
-              y: { stacked: true, beginAtZero: true }
-            }
-          }
-        });
-      } else {
-        const cat = filteredData[0] || { positive: 0, negative: 0 };
-        window.sentimentChart = new Chart(barCtx, {
-          type: "bar",
-          data: {
-            labels: ["Positive", "Negative"],
-            datasets: [
+          : [
               {
                 label: selectedCategory,
-                data: [cat.positive, cat.negative],
+                data: [filteredData[0]?.positive || 0, filteredData[0]?.negative || 0],
                 backgroundColor: ["#4CAF50", "#F44336"]
               }
-            ]
+            ];
+    
+      const chartLabels = selectedCategory === "View All"
+        ? filteredData.map((s) =>
+            s.department.includes(" ")
+              ? s.department.replace(/\s+/g, "\n")
+              : s.department
+          )
+        : ["Positive", "Negative"];
+    
+      window.sentimentChart = new Chart(barCtx, {
+        type: "bar",
+        data: {
+          labels: chartLabels,
+          datasets
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: {
+              callbacks: {
+                title: (tooltipItems) => tooltipItems[0].label
+              }
+            }
           },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: { beginAtZero: true }
+          scales: {
+            x: {
+              ticks: {
+                autoSkip: false,
+                maxRotation: 45,
+                minRotation: 0,
+                font: { size: 12 },
+                callback: function (value, index, values) {
+                  const label = this.getLabelForValue(value);
+                  return label.split('\n');
+                }
+              }
+            },
+            y: {
+              beginAtZero: true
             }
           }
-        });
-      }
-    }
+        }
+      });
+    }       
   }, [filteredData, activeChart, selectedCategory]);
 
   const downloadCSV = () => {
@@ -188,6 +212,8 @@ function OverviewTab() {
     document.body.removeChild(link);
   };
 
+  const summariesFromCache = overviewCache?.summaries || [];
+
   const topPositiveCategories = [...sentimentData]
     .sort((a, b) => b.positive_pct - a.positive_pct)
     .slice(0, 3);
@@ -196,7 +222,7 @@ function OverviewTab() {
     .sort((a, b) => b.negative_pct - a.negative_pct)
     .slice(0, 3);
 
-  const filteredSummaries = summaries.filter((s) =>
+  const filteredSummaries = summariesFromCache.filter((s) =>
     selectedCategory === "View All" ? false : s.department === selectedCategory
   );
 
@@ -208,19 +234,24 @@ function OverviewTab() {
     .filter((s) => s.sentiment.toLowerCase() === "negative")
     .slice(0, 3);
 
+  const totalPositive = sentimentData.reduce((a, b) => a + b.positive, 0);
+  const totalNegative = sentimentData.reduce((a, b) => a + b.negative, 0);
+
   return (
     <div className={styles.container}>
-      <h2>Sentiment Overview</h2>
+      <div className={styles.exportContainer}>
+        <button onClick={downloadCSV}>📄 Export CSV</button>
+      </div>
 
       <div className={styles.controls}>
-        <label>Timeframe:</label>
+        <label title="Choose how far back to analyze feedback">Timeframe:</label>
         <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
           <option value={7}>Last 7 Days</option>
           <option value={30}>Last 30 Days</option>
           <option value={90}>Last 90 Days</option>
         </select>
 
-        <label>Category:</label>
+        <label title="Filter by product or service category">Category:</label>
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
@@ -230,37 +261,52 @@ function OverviewTab() {
           ))}
         </select>
 
-        {selectedCategory && (
-          <>
-            <div className={styles.chartTabs}>
-              <button
-                className={activeChart === "bar" ? styles.activeTab : ""}
-                onClick={() => setActiveChart("bar")}
-              >
-                Sentiment Breakdown
-              </button>
-              <button
-                className={activeChart === "pie" ? styles.activeTab : ""}
-                onClick={() => setActiveChart("pie")}
-              >
-                Pie View
-              </button>
-            </div>
-            <button onClick={downloadCSV}>📄 Export CSV</button>
-          </>
-        )}
+        <div className={styles.chartTabs}>
+          <button
+            className={activeChart === "bar" ? styles.activeTab : ""}
+            onClick={() => setActiveChart("bar")}
+          >
+            Sentiment Breakdown
+          </button>
+          <button
+            className={activeChart === "pie" ? styles.activeTab : ""}
+            onClick={() => setActiveChart("pie")}
+          >
+            Pie View
+          </button>
+        </div>
       </div>
 
-      {loading && <p className={styles.loading}>Loading data...</p>}
+      {loading && (
+        <div className={styles.loadingContainer}>
+          <FaSpinner className={styles.spinner} />
+          <p className={styles.loading}>Loading data...</p>
+        </div>
+      )}
 
       {!loading && selectedCategory && filteredData.length > 0 && (
-        <>
-          <div className={styles.chartContainer}>
-            {activeChart === "bar" && <canvas id="sentimentBarChart" />}
-            {activeChart === "pie" && <canvas id="sentimentPieChart" className={styles.pieChart} />}
-          </div>
-
+        <div className={styles.contentWrapper}>
           <div className={styles.breakdownSection}>
+            {selectedCategory === "View All" ? (
+              <div className={styles.metricsBox}>
+                <h3>📊 Overall Feedback Summary</h3>
+                <ul>
+                  <li><strong>Total:</strong> {summariesFromCache.length}</li>
+                  <li><strong>Positive:</strong> {totalPositive}</li>
+                  <li><strong>Negative:</strong> {totalNegative}</li>
+                </ul>
+              </div>
+            ) : (
+              <div className={styles.metricsBox}>
+                <h3>📊 Feedback Summary ({selectedCategory})</h3>
+                <ul>
+                  <li><strong>Total:</strong> {filteredSummaries.length}</li>
+                  <li><strong>Positive:</strong> {topPositiveSummaries.length}</li>
+                  <li><strong>Negative:</strong> {topNegativeSummaries.length}</li>
+                </ul>
+              </div>
+            )}
+
             {selectedCategory === "View All" ? (
               <>
                 <h3>📈 Top Positive Categories</h3>
@@ -286,7 +332,12 @@ function OverviewTab() {
               </>
             )}
           </div>
-        </>
+
+          <div className={styles.chartContainer}>
+            {activeChart === "bar" && <canvas id="sentimentBarChart" />}
+            {activeChart === "pie" && <canvas id="sentimentPieChart" className={styles.pieChart} />}
+          </div>
+        </div>
       )}
     </div>
   );

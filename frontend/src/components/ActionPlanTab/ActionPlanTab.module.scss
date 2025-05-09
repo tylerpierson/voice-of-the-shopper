@@ -1,0 +1,225 @@
+.container {
+    padding: 2rem;
+    max-width: 100%;
+    margin: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #2c3e50;
+  }
+  
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: #1a237e;
+  }
+  
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+  
+    label {
+      font-weight: 600;
+    }
+  
+    select {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      background-color: #fff;
+      cursor: pointer;
+  
+      &:hover {
+        border-color: #1976d2;
+      }
+    }
+  }
+  
+  .tableWrapper {
+    overflow-x: auto;
+  }
+  
+  .actionTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin: auto;
+    border: 1px solid #ddd;
+  
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      vertical-align: top;
+    }
+  
+    th {
+      background-color: #f5f5f5;
+      color: #37474f;
+      font-weight: 600;
+    }
+  
+    tr:hover {
+      background-color: #f9f9f9;
+    }
+  
+    .stepRow {
+      cursor: pointer;
+    }
+  }
+  
+  .dropdownArrow {
+    display: inline-block;
+    width: 1.2rem;
+    text-align: center;
+    margin-right: 0.5rem;
+    font-weight: bold;
+  }
+  
+  .summaryList {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin-top: 0.5rem;
+  
+    .summary {
+      margin-bottom: 0.4rem;
+  
+      .summaryLink {
+        color: #1976d2;
+        text-decoration: none;
+  
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+  
+      .confidence {
+        font-style: italic;
+        color: #999;
+        margin-left: 0.5rem;
+      }
+    }
+  }
+  
+  .loadingContainer {
+    text-align: center;
+    padding: 2rem;
+  
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #1976d2;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+  
+    p {
+      font-style: italic;
+      color: #555;
+    }
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .pagination {
+    margin-top: 1rem;
+    text-align: center;
+  
+    button {
+      padding: 6px 12px;
+      margin: 0 8px;
+      border: none;
+      background-color: #1976d2;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+  
+      &:disabled {
+        background-color: #90caf9;
+        cursor: not-allowed;
+      }
+    }
+  }
+  
+  /* Slide Animation Classes for react-transition-group */
+  .slideEnter {
+    opacity: 0;
+    max-height: 0;
+    transform: scaleY(0);
+    overflow: hidden;
+  }
+  
+  .slideEnterActive {
+    opacity: 1;
+    max-height: 500px;
+    transform: scaleY(1);
+    transition: all 0.3s ease-out;
+  }
+  
+  .slideExit {
+    opacity: 1;
+    max-height: 500px;
+    transform: scaleY(1);
+  }
+  
+  .slideExitActive {
+    opacity: 0;
+    max-height: 0;
+    transform: scaleY(0);
+    transition: all 0.2s ease-in;
+  }
+  
+  .expandedRow {
+    td {
+      padding: 0;
+      background-color: #fafafa;
+    }
+  }
+  
+  .impact, .effort {
+    width: 100px;
+  }
+  
+  @media (max-width: 768px) {
+    .controls {
+      flex-direction: column;
+      align-items: stretch;
+      label,
+      select {
+        width: 100%;
+      }
+    }
+  
+    .actionTable {
+        font-size: 0.9rem;
+    
+        th:nth-child(2),
+        td:nth-child(2),
+        th:nth-child(3),
+        td:nth-child(3) {
+        display: none;
+        }
+    }
+    
+  
+    .summaryList {
+      padding-left: 1rem;
+      .summary {
+        font-size: 0.9rem;
+      }
+    }
+  
+    .pagination {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+  

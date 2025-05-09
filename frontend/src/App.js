@@ -12,7 +12,6 @@ import ProgressiveOnboarding from "./components/ProgressiveOnboarding/Progressiv
 import ConversationPage from "./pages/ConversationPage/ConversationPage";
 import AdminPage from "./pages/AdminPage/AdminPage";
 import NavBar from "./components/NavBar/NavBar";
-import DuplicatesTab from "./components/DuplicatesTab/DuplicatesTab";
 import ActionPlanTab from "./components/ActionPlanTab/ActionPlanTab";
 import OverviewTab from "./components/OverviewTab/OverviewTab";
 import MapWithFeedback from "./components/MapWithFeedback/MapWithFeedback";
@@ -21,8 +20,6 @@ import SideBar from "./components/SideBar/SideBar"; // import the sidebar
 import styles from "./App.module.scss";
 // Import Leaflet CSS (only once in the app)
 import 'leaflet/dist/leaflet.css';
-
-// Optional: Fix for default marker icons
 import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -37,6 +34,9 @@ function AppWrapper(className) {
   const [activeTab, setActiveTab] = useState("overview");
   const [summaries, setSummaries] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [actionPlanCache, setActionPlanCache] = useState({});
+  const [overviewCache, setOverviewCache] = useState(null);
+
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,12 +67,12 @@ function AppWrapper(className) {
     // }
   };
 
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+  });
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
   const renderHeader = () => (
     <div className={styles.header}>
       {location.pathname === "/admin" ? (
@@ -99,7 +99,7 @@ L.Icon.Default.mergeOptions({
         </>
       )  : null}
     </div>
-  );  
+  );
 
   return (
     <div className={className}>
@@ -110,9 +110,7 @@ L.Icon.Default.mergeOptions({
           path="/"
           element={
             showOnboarding ? (
-              <ProgressiveOnboarding
-                onFinish={() => setShowOnboarding(false)}
-              />
+              <ProgressiveOnboarding onFinish={() => setShowOnboarding(false)} />
             ) : (
               <FeedbackChat
                 toggleAdmin={() => navigate("/admin")}
@@ -132,6 +130,8 @@ L.Icon.Default.mergeOptions({
                 <OverviewTab
                   category="View All"
                   summaries={summaries}
+                  overviewCache={overviewCache}
+                  setOverviewCache={setOverviewCache}
                 />
               )}
               {activeTab === "feedback" && (
@@ -140,12 +140,11 @@ L.Icon.Default.mergeOptions({
                   setActiveCategory={setActiveCategory}
                 />
               )}
-              {activeTab === "duplicates" && (
-                <DuplicatesTab />
-              )}
               {activeTab === "action" && (
                 <ActionPlanTab
                   summaries={summaries}
+                  actionPlanCache={actionPlanCache}
+                  setActionPlanCache={setActionPlanCache}
                 />
               )}
               {activeTab === "feedBackWithGeo" && (
@@ -155,10 +154,7 @@ L.Icon.Default.mergeOptions({
           }
         />
 
-        <Route
-          path="/conversation/:sessionId"
-          element={<ConversationPage />}
-        />
+        <Route path="/conversation/:sessionId" element={<ConversationPage />} />
       </Routes>
       </div>
       {/* <Footer/> */}

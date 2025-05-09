@@ -64,7 +64,8 @@ function FeedbackChat({ toggleAdmin, userName, setUserName }) {
       message: text,
       user_name: userName,
       session_id: sessionId,
-      category: selectedCategory
+      category: selectedCategory,
+      location: selectedLocation.address || "Unknown"
     };
 
     try {
