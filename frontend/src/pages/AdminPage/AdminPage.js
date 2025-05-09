@@ -224,94 +224,9 @@ return (
         </section>
 
         {/* Table */}
-        <section className={styles.tableSection}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>
-                  <div className={styles.sortHeader} onClick={() => handleSort("timestamp")}>
-                    Date
-                    <span className={`${styles.sortArrow} ${sortKey === "timestamp" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
-                    <span className={`${styles.sortArrow} ${sortKey === "timestamp" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
-                  </div>
-                </th>
-                <th>Summary</th>
-                <th>
-                  <div className={styles.sortHeader} onClick={() => handleSort("sentiment")}>
-                    Sentiment
-                    <span className={`${styles.sortArrow} ${sortKey === "sentiment" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
-                    <span className={`${styles.sortArrow} ${sortKey === "sentiment" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
-                  </div>
-                </th>
-                <th>
-                  <div className={styles.sortHeader} onClick={() => handleSort("department")}>
-                    Category
-                    <span className={`${styles.sortArrow} ${sortKey === "department" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
-                    <span className={`${styles.sortArrow} ${sortKey === "department" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
-                  </div>
-                </th>
-                <th>
-                  <div className={styles.sortHeader} onClick={() => handleSort("user_name")}>
-                    User
-                    <span className={`${styles.sortArrow} ${sortKey === "user_name" && sortDirection === "asc" ? styles.activeArrow : ""}`}>▲</span>
-                    <span className={`${styles.sortArrow} ${sortKey === "user_name" && sortDirection === "desc" ? styles.activeArrow : ""}`}>▼</span>
-                  </div>
-                </th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedFeedbacks.map((fb) => (
-                <tr
-                  key={fb.session_id}
-                  className={styles.clickableRow}
-                  onClick={() => goToConversationPage(fb.session_id)}
-                >
-                  <td className={styles.td}>{formatDate(fb.timestamp)}</td>
-                  <td className={styles.td}>{fb.summary}</td>
-                  <td className={styles.td}>
-                    <span style={getSentimentStyle(fb.sentiment)} className={styles.badge}>
-                      {fb.sentiment}
-                    </span>
-                  </td>
-                  <td className={styles.td}>{fb.department}</td>
-                  <td className={styles.td}>{fb.user_name || "Anonymous"}</td>
-                  <td className={styles.td}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteSummary(fb.session_id);
-                      }}
-                      className={styles.deleteBtn}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+        {/* <section className={styles.tableSection}> */}
 
-        {/* Pagination */}
-        {pageCount > 1 && (
-          <div className={styles.pagination}>
-            <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
-              &lt; Prev
-            </button>
-            <span>Page {currentPage} of {pageCount}</span>
-            <button onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))} disabled={currentPage === pageCount}>
-              Next &gt;
-            </button>
-          </div>
-        )}
-
-        {/* Action Plan */}
-        {selectedSessionId && (
-          <ActionPlan sessionId={selectedSessionId} onClose={() => setSelectedSessionId(null)} />
-        )}
-      </div>
-);
+            
 
       <table className={styles.table}>
         <thead>
@@ -388,5 +303,4 @@ return (
     </div>
   );
 }
-
 export default AdminPage;
